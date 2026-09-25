@@ -20,12 +20,14 @@ Portraits belong in:
 
 ```text
 public/players/<team-id>/<character-name>.webp
+public/players/<team-id>/<character-name>.png
 ```
 
 Examples:
 
 ```text
 public/players/seigaku/ryoma-echizen.webp
+public/players/seigaku/ryoma-echizen.png
 public/players/hyoutei/keigo-atobe.webp
 public/players/rikkai/seiichi-yukimura.webp
 ```
@@ -47,9 +49,9 @@ foreign
 other
 ```
 
-Use `.webp` files and keep the names lowercase with hyphens. The exact expected filename for every character is generated in `src/data.js`. Square or 4:5 portraits work best. A character automatically keeps the colored initials design until their matching image file exists.
+Use `.webp` or `.png` files and keep the names lowercase with hyphens. The app checks WebP first and then PNG, so WebP wins if both versions exist. The exact expected filename for every character is generated in `src/data.js`. Square or 4:5 portraits work best. A character automatically keeps the colored initials design until their matching image file exists.
 
-### Converting an image to WebP
+### Optional: converting an image to WebP
 
 Windows Paint can save an opened image as WebP on current Windows versions:
 
@@ -92,4 +94,3 @@ npm run build
 4. Open the newest **Deploy to GitHub Pages** run.
 5. A green check means deployment succeeded. A red cross contains the error details.
 6. Also try a hard refresh with `Ctrl+F5` because the browser may have cached the old site.
-

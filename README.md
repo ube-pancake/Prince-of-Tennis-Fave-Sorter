@@ -15,9 +15,9 @@ The repository deploys automatically to GitHub Pages after each push to `main`. 
 
 ## Character portraits
 
-The app works without portraits and uses team-colored monograms as its intentional fallback. To add artwork, place `.webp` portraits in `public/players/<team-id>/` using the filename slugs in `src/data.js`.
+The app works without portraits and uses team-colored monograms as its intentional fallback. To add artwork, place `.webp` or `.png` portraits in `public/players/<team-id>/` using the filename slugs in `src/data.js`. WebP is preferred when both formats exist.
 
-Example: `public/players/seigaku/ryoma-echizen.webp`.
+Examples: `public/players/seigaku/ryoma-echizen.webp` or `public/players/seigaku/ryoma-echizen.png`.
 
 ## Included features
 

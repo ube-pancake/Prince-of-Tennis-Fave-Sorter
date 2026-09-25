@@ -43,15 +43,17 @@ function Header({ dark, onToggleDark, phase }) {
 }
 
 function Portrait({ player, compact = false }) {
-  const [failed, setFailed] = useState(false)
+  const [imageIndex, setImageIndex] = useState(0)
   const school = schoolMap[player.schoolId]
   const initials = player.name.split(/\s+/).map((part) => part[0]).slice(0, 2).join('')
-  useEffect(() => setFailed(false), [player.id])
+  const imageSources = [player.image, player.image.replace(/\.webp$/i, '.png')]
+  const hasImageSource = imageIndex < imageSources.length
+  useEffect(() => setImageIndex(0), [player.id])
   return (
     <div className={`portrait ${compact ? 'portrait--compact' : ''}`} style={{ '--team': school.color, '--team-accent': school.accent }}>
       <div className="court-lines" aria-hidden="true"><span /><span /></div>
-      {!failed && <img src={player.image} alt="" onError={() => setFailed(true)} />}
-      {failed && <span className="portrait-initials">{initials}</span>}
+      {hasImageSource && <img src={imageSources[imageIndex]} alt="" onError={() => setImageIndex((current) => current + 1)} />}
+      {!hasImageSource && <span className="portrait-initials">{initials}</span>}
       <span className="portrait-code">{school.short}</span>
     </div>
   )
