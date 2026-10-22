@@ -1,6 +1,7 @@
 export const createSortState = (ids) => ({
   runs: ids.map((id) => [[id]]),
   nextRuns: [],
+  rejected: [],
   pairIndex: 0,
   leftIndex: 0,
   rightIndex: 0,
@@ -12,6 +13,7 @@ const clone = (value) => JSON.parse(JSON.stringify(value))
 
 const normalize = (input) => {
   const state = clone(input)
+  state.rejected ??= []
 
   while (state.runs.length > 1) {
     if (state.pairIndex >= state.runs.length) {
@@ -69,6 +71,10 @@ export const applyChoice = (input, choice) => {
     state.leftIndex += 1
   } else if (choice === 'right') {
     state.merged.push(pair[1])
+    state.rightIndex += 1
+  } else if (choice === 'neither') {
+    state.rejected.push(...pair[0], ...pair[1])
+    state.leftIndex += 1
     state.rightIndex += 1
   } else {
     state.merged.push([...pair[0], ...pair[1]])
