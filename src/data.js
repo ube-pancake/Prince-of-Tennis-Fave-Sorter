@@ -114,7 +114,7 @@ export const players = Object.entries(roster).flatMap(([schoolId, names]) =>
     nameJa: japaneseNames[name],
     schoolId,
     seed: index,
-    image: `/players/${schoolId}/${slugify(name)}.webp`,
+    image: `${import.meta.env.BASE_URL}players/${schoolId}/${slugify(name)}.webp`,
   })),
 )
 
