@@ -128,9 +128,9 @@ html[lang="ja"] .hero-copy h1, html[lang="ja"] .results-hero h1 { font-size: cla
 .utility-button kbd { min-width: 20px; height: 20px; margin-left: 3px; font-size: 9px; box-shadow: none; }
 
 .comparison-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; min-height: 610px; border: 1px solid var(--line); background: var(--surface); }
-.candidate { display: grid; grid-template-rows: 1fr auto; min-width: 0; padding: 0; overflow: hidden; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.candidate { display: grid; grid-template-rows: auto 1fr; min-width: 0; padding: 0; overflow: hidden; border: 0; background: transparent; text-align: left; cursor: pointer; }
 .candidate:first-child { border-right: 1px solid var(--line); }
-.candidate-visual { position: relative; min-height: 440px; overflow: hidden; background: color-mix(in srgb, var(--team) 9%, var(--surface)); }
+.candidate-visual { position: relative; height: 440px; overflow: hidden; background: color-mix(in srgb, var(--team) 9%, var(--surface)); }
 .portrait { position: relative; width: 100%; height: 100%; min-height: 440px; overflow: hidden; background: var(--team); isolation: isolate; }
 .portrait::before { content: ""; position: absolute; z-index: 0; width: 82%; aspect-ratio: 1; top: 12%; left: 9%; border: 2px solid var(--team-accent); border-radius: 50%; opacity: .45; }
 .portrait::after { content: ""; position: absolute; z-index: 0; inset: 0; background: linear-gradient(155deg, transparent 48%, rgba(0,0,0,.24)); }
@@ -143,9 +143,9 @@ html[lang="ja"] .hero-copy h1, html[lang="ja"] .results-hero h1 { font-size: cla
 .court-lines span:first-child { position: absolute; inset: 0 25%; border-right: 1px solid var(--team-accent); border-left: 1px solid var(--team-accent); }
 .candidate-copy { position: relative; z-index: 5; min-height: 138px; padding: 27px 30px 26px; background: var(--surface); }
 .candidate-school { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
-.candidate-copy h2 { margin: 4px 0 0; font-family: var(--display-font); font-size: clamp(34px, 4vw, 56px); letter-spacing: -.04em; line-height: .95; text-transform: uppercase; }
+.candidate-copy h2 { display: -webkit-box; margin: 4px 0 0; overflow: hidden; font-family: var(--display-font); font-size: clamp(34px, 4vw, 56px); letter-spacing: -.04em; line-height: .95; text-transform: uppercase; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 html[lang="ja"] .candidate-copy h2 { overflow-wrap: anywhere; font-size: clamp(30px, 3vw, 46px); letter-spacing: .01em; line-height: 1.15; }
-.candidate-copy p { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
+.candidate-copy p { display: -webkit-box; margin: 8px 0 0; overflow: hidden; color: var(--muted); font-size: 11px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .pick-cue { position: absolute; z-index: 5; display: flex; align-items: center; gap: 10px; top: 18px; left: 18px; padding: 9px 12px; color: #fff; background: rgba(0,0,0,.56); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; opacity: 0; transform: translateY(-5px); transition: opacity .2s, transform .2s; }
 .candidate--right .pick-cue { right: 18px; left: auto; }
 .candidate:hover .pick-cue { opacity: 1; transform: translateY(0); }
@@ -253,10 +253,11 @@ footer span:first-child { color: var(--ink); font-weight: 900; }
   .utility-button { width: 42px; padding: 0; justify-content: center; font-size: 0; }
   .utility-button kbd { display: none; }
   .comparison-grid { grid-template-columns: 1fr; min-height: 0; border: 0; gap: 12px; background: transparent; }
-  .candidate { grid-template-columns: 42% 1fr; grid-template-rows: auto; min-height: 210px; border: 1px solid var(--line) !important; background: var(--surface); }
+  .candidate { grid-template-columns: 42% 1fr; grid-template-rows: auto; height: 210px; border: 1px solid var(--line) !important; background: var(--surface); }
+  .candidate-visual { height: 210px; }
   .candidate-visual, .portrait { min-height: 210px; }
-  .candidate-copy { display: flex; flex-direction: column; justify-content: center; min-height: 210px; padding: 20px; }
-  .candidate-copy h2 { font-size: clamp(30px, 8vw, 44px); }
+  .candidate-copy { display: flex; flex-direction: column; justify-content: center; min-height: 0; padding: 20px; overflow: hidden; }
+  .candidate-copy h2 { font-size: clamp(26px, 7.5vw, 44px); overflow-wrap: anywhere; }
   .portrait-initials { font-size: 70px; }
   .pick-cue { display: none; }
   .versus { top: 50%; width: 48px; height: 48px; border-width: 5px; }
