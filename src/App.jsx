@@ -311,6 +311,26 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
   const hasRankedCharacters = ranked.length > 0
   const rejectedPlayers = rejectedIds.map((id) => playerMap[id]).filter(Boolean)
 
+  // The winner's name wraps between words; if a single word is still too wide for the
+  // heading, shrink the text step by step until it fits instead of cutting it off.
+  const winnerRef = useRef(null)
+  useLayoutEffect(() => {
+    const element = winnerRef.current
+    if (!element) return undefined
+    const fit = () => {
+      element.style.fontSize = ''
+      let size = parseFloat(window.getComputedStyle(element).fontSize)
+      while (size > 24 && element.scrollWidth > element.clientWidth + 1) {
+        size -= 2
+        element.style.fontSize = `${size}px`
+      }
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    document.fonts?.ready.then(fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [top])
+
   const shareUrl = () => {
     const encoded = groups.map((group) => group.join('~')).join(',')
     return `${window.location.origin}${window.location.pathname}#result=${encodeURIComponent(encoded)}`
@@ -370,7 +390,7 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
         <div>
           <span className="results-label">{t.results.finalOrder}</span>
           {hasRankedCharacters
-            ? <h1>{t.results.gameSet}<br/><em>{top}.</em></h1>
+            ? <h1>{t.results.gameSet}<br/><em ref={winnerRef}>{top}.</em></h1>
             : <h1>{t.results.noFavourites}<br/><em>{t.results.thisTime}</em></h1>}
         </div>
         <p>{hasRankedCharacters
