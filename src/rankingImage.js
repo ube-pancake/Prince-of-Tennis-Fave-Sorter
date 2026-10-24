@@ -1,3 +1,4 @@
+import QRCode from 'qrcode'
 import { coverCrop, imageSourcesFor } from './crop.js'
 import { schoolMap } from './data.js'
 
@@ -42,6 +43,24 @@ const drawPortrait = (ctx, player, image, x, y, w, h, initialsSize) => {
   ctx.restore()
 }
 
+// Draws a scannable QR code (dark modules on a white tile with a quiet zone) at x, y.
+const drawQrCode = (ctx, text, x, y, size) => {
+  const { modules } = QRCode.create(text, { errorCorrectionLevel: 'M' })
+  const quiet = 2
+  const cell = size / (modules.size + quiet * 2)
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(x, y, size, size)
+  ctx.fillStyle = INK
+  for (let row = 0; row < modules.size; row += 1) {
+    for (let col = 0; col < modules.size; col += 1) {
+      if (modules.get(row, col)) {
+        // Overlap by a hair so anti-aliasing doesn't leave faint lines between modules.
+        ctx.fillRect(x + (col + quiet) * cell, y + (row + quiet) * cell, cell + 0.5, cell + 0.5)
+      }
+    }
+  }
+}
+
 // Splits text into at most `maxLines` lines that fit `maxWidth`, adding an ellipsis if cut.
 const wrapText = (ctx, text, maxWidth, maxLines) => {
   const words = text.includes(' ') ? text.split(' ') : [...text]
@@ -62,7 +81,7 @@ const wrapText = (ctx, text, maxWidth, maxLines) => {
   return kept
 }
 
-export async function buildRankingImage({ entries, title, heading, footer, schoolName, language }) {
+export async function buildRankingImage({ entries, title, heading, footer, schoolName, language, siteUrl, scanCaption }) {
   const font = language === 'ja' ? '"Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif' : 'Arial, sans-serif'
   const displayFont = language === 'ja' ? font : '"Arial Black", Arial, sans-serif'
   const podium = entries.slice(0, 3)
@@ -75,7 +94,8 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
   const rowH = 104
   const colGap = 24
   const colW = (WIDTH - MARGIN * 2 - colGap) / 2
-  const podiumTop = 250
+  const qrSize = 150
+  const podiumTop = 300
   const podiumBottom = podium.length ? podiumTop + tileH + 120 : podiumTop
   const rowsTop = podiumBottom + 30
   const rowCount = Math.ceil(rest.length / 2)
@@ -95,6 +115,16 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
   ctx.fillStyle = MUTED
   ctx.font = `700 26px ${font}`
   ctx.fillText(heading, MARGIN + 4, 220)
+
+  if (siteUrl) {
+    const qrX = WIDTH - MARGIN - qrSize
+    drawQrCode(ctx, siteUrl, qrX, 98, qrSize)
+    ctx.fillStyle = INK
+    ctx.font = `800 16px ${font}`
+    ctx.textAlign = 'center'
+    ctx.fillText(scanCaption, qrX + qrSize / 2, 98 + qrSize + 26)
+    ctx.textAlign = 'left'
+  }
 
   podium.forEach(({ player, rank }, index) => {
     const x = MARGIN + index * (tileW + tileGap)
@@ -136,7 +166,5 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
   ctx.font = `20px ${font}`
   ctx.fillText(footer, MARGIN, height - 50)
 
-  const dataUrl = canvas.toDataURL('image/png')
-  const blob = await new Promise((resolve) => canvas.toBlob ? canvas.toBlob(resolve, 'image/png') : resolve(null))
-  return { dataUrl, blob }
+  return { dataUrl: canvas.toDataURL('image/png') }
 }

@@ -248,8 +248,6 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
   )
 }
 
-// In-app browsers (Messenger, Facebook, Instagram, LINE…) usually ignore file
-// downloads, so they get a preview to long-press and save instead.
 function detectBrowser() {
   const ua = navigator.userAgent || ''
   return {
@@ -274,12 +272,11 @@ function ImagePreview({ image, onClose, t }) {
   return (
     <div className="image-preview" role="dialog" aria-modal="true" aria-label={t.results.previewTitle} onClick={onClose}>
       <div className="image-preview-inner" onClick={(event) => event.stopPropagation()}>
-        <p className="image-preview-hint">{t.results.longPressHint}</p>
+        <p className="image-preview-hint">{browser.mobile ? t.results.longPressHint : t.results.rightClickHint}</p>
         <img src={image.dataUrl} alt={t.results.previewTitle} />
         {browser.inApp && <p className="image-preview-note">{t.results.inAppNote}</p>}
         <div className="image-preview-actions">
           {browser.line && <a className="secondary-button" href={externalUrl()}>{t.results.openInBrowser}</a>}
-          <a className="secondary-button" href={image.dataUrl} download="court-order-ranking.png">{t.results.saveFile}</a>
           <button className="primary-button" onClick={onClose}>{t.results.close}</button>
         </div>
       </div>
@@ -342,44 +339,29 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
     setRankingImage(null)
     if (!hasRankedCharacters) return undefined
     const entries = ranked.map(({ group, rank: itemRank }) => ({ player: { ...playerMap[group[0]], label: playerName(playerMap[group[0]], language) }, rank: itemRank }))
-    buildRankingImage({ entries, title: 'COURT ORDER', heading: t.results.imageHeading, footer: t.results.imageFooter, schoolName: (id) => t.schools[id], language })
+    buildRankingImage({
+      entries,
+      title: 'COURT ORDER',
+      heading: t.results.imageHeading,
+      footer: t.results.imageFooter,
+      schoolName: (id) => t.schools[id],
+      language,
+      siteUrl: `${window.location.origin}${window.location.pathname}`,
+      scanCaption: t.results.scanToPlay,
+    })
       .then((image) => { if (!cancelled) setRankingImage(image) })
       .catch(() => { if (!cancelled) setNotice(t.results.imageFailed) })
     return () => { cancelled = true }
   }, [imageKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const downloadImage = async () => {
+  // Never downloads by itself: the image opens on the page so people save it themselves
+  // (right-click on desktop, press and hold on phones and in-app browsers).
+  const downloadImage = () => {
     if (!rankingImage) {
       setNotice(t.results.imagePreparing)
       return
     }
-    const { dataUrl, blob } = rankingImage
-    const browser = detectBrowser()
-    if (browser.inApp) {
-      setPreviewOpen(true)
-      return
-    }
-    if (browser.mobile) {
-      const file = blob && typeof File === 'function' ? new File([blob], 'court-order-ranking.png', { type: 'image/png' }) : null
-      if (file && navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file] })
-          return
-        } catch (error) {
-          if (error?.name === 'AbortError') return
-        }
-      }
-      setPreviewOpen(true)
-      return
-    }
-    const link = document.createElement('a')
-    link.download = 'court-order-ranking.png'
-    link.href = blob ? URL.createObjectURL(blob) : dataUrl
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    if (blob) window.setTimeout(() => URL.revokeObjectURL(link.href), 4000)
-    setNotice(t.results.imageDownloaded)
+    setPreviewOpen(true)
   }
 
   return (
