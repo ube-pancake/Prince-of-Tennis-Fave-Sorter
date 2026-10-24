@@ -25,7 +25,6 @@ export const translations = {
     candidate: {
       tiedCount: (count) => `+${count} tied`,
       pick: (side) => `Pick ${side}`,
-      groupedWith: 'Grouped with',
     },
     sorting: {
       comparison: 'Comparison', sorted: 'sorted', undo: 'Undo', save: 'Save', saved: 'Saved',
@@ -72,7 +71,6 @@ export const translations = {
     candidate: {
       tiedCount: (count) => `+${count}人 同率`,
       pick: (side) => side === 'left' ? '左を選ぶ' : '右を選ぶ',
-      groupedWith: '同率',
     },
     sorting: {
       comparison: '比較', sorted: '完了', undo: '元に戻す', save: '保存', saved: '保存済み',

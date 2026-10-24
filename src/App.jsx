@@ -139,7 +139,6 @@ function CandidateCard({ ids, side, onChoose, language, t }) {
       <div className="candidate-copy">
         <span className="candidate-school">{t.schools[school.id]}</span>
         <h2>{playerName(player, language)}</h2>
-        {ids.length > 1 && <p>{t.candidate.groupedWith}: {ids.slice(1).map((id) => playerName(playerMap[id], language)).join(', ')}</p>}
       </div>
     </button>
   )
