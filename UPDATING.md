@@ -70,6 +70,40 @@ Open `src/data.js` in a text editor. Character names are grouped under their tea
 
 After editing, run the normal commit and push routine above.
 
+## Collecting results in Google Sheets
+
+Every finished sort on the live site can be sent to your own private Google Sheet. Visitors see nothing different, and only you can open the sheet.
+
+### One-time setup
+
+1. Create a new Google Sheet (for example `Court Order results`).
+2. In the sheet, open **Extensions → Apps Script**.
+3. Delete the sample code, paste everything from `docs/google-apps-script.gs`, and click **Save**.
+4. Click **Deploy → New deployment**. Click the gear icon and choose **Web app**.
+   - **Execute as:** Me
+   - **Who has access:** Anyone
+5. Click **Deploy**, then allow the permissions Google asks for. If Google warns that the app isn't verified, choose **Advanced → Go to (project name)**. It's your own script.
+6. Copy the **Web app URL**. It ends in `/exec`.
+7. Open `src/results.js` and paste the URL between the quotes on the `RESULTS_URL` line.
+8. Commit and push as usual.
+
+### What you get
+
+- **Results** tab: one row per finished sort, with time, teams chosen, #1–#3, the full ranking, the "Neither" picks and the language.
+- **Ranking** tab: the overall leaderboard, rebuilt after every new result.
+
+Because people choose different teams, each placement is scored by how high it is in that person's list. #1 is 100, last place is 0, and "Neither" counts as 0. The leaderboard is ordered by the average of those scores, then by number of #1 finishes.
+
+Only the live website sends results. Testing with `npm run dev` never adds rows.
+
+### Fixing or resetting data
+
+Delete the rows you don't want on the **Results** tab. Then in Apps Script, pick `rebuildRanking` in the function dropdown and click **Run**.
+
+### If you change the script later
+
+Use **Deploy → Manage deployments → Edit (pencil) → Version: New version → Deploy**. This keeps the same URL, so `src/results.js` doesn't need to change.
+
 ## Checking an update before publishing
 
 From the project folder, run:

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { coverPosition, imageSourcesFor } from './crop.js'
 import { players, schools, schoolMap } from './data.js'
 import { buildRankingImage } from './rankingImage.js'
+import { sendResult } from './results.js'
 import { translations } from './i18n.js'
 import { applyChoice, createSortState, currentPair, estimateComparisons, getResult } from './sorter.js'
 
@@ -477,14 +478,21 @@ export default function App() {
     if (next === sortState) return
     setHistory((items) => [...items, sortState])
     setSortState(next)
-    if (getResult(next)) {
+    const result = getResult(next)
+    if (result) {
+      sendResult({
+        teams: schools.filter((school) => selected.includes(school.id)).map((school) => school.name),
+        ranking: result.flat().map((id) => playerMap[id]?.name).filter(Boolean),
+        neither: (next.rejected || []).map((id) => playerMap[id]?.name).filter(Boolean),
+        language,
+      })
       setPhase('results')
       localStorage.removeItem(STORAGE_KEY)
       setHasSave(false)
       window.scrollTo(0, 0)
     }
     setSavedAt(null)
-  }, [sortState])
+  }, [sortState, selected, language])
 
   const undo = useCallback(() => {
     if (!history.length) return
