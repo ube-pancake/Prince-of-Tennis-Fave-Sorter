@@ -1,6 +1,6 @@
 import portraits from 'virtual:portraits'
 
-export const schools = [
+const allSchools = [
   { id: 'seigaku', name: 'Seigaku', short: 'SG', color: '#153fc0', accent: '#f5d23b' },
   { id: 'fudomine', name: 'Fudomine', short: 'FD', color: '#22282b', accent: '#f27b35' },
   { id: 'rudolph', name: 'St. Rudolph', short: 'SR', color: '#7c1b2f', accent: '#e8c9a5' },
@@ -228,7 +228,7 @@ portraits
     portraitFiles[key] ??= file
   })
 
-export const players = Object.entries(roster).flatMap(([schoolId, names]) =>
+const allPlayers = Object.entries(roster).flatMap(([schoolId, names]) =>
   names.map((name, index) => ({
     id: `${schoolId}-${slugify(name)}`,
     name,
@@ -239,5 +239,10 @@ export const players = Object.entries(roster).flatMap(([schoolId, names]) =>
     focus: faceFocus[`${schoolId}/${slugify(name)}`] ?? [50, 30],
   })),
 )
+
+// Teams without a single portrait yet (e.g. Foreign Teams, Other) stay in the roster above but are
+// hidden from the site. Each one shows up automatically once its first photo is added.
+export const schools = allSchools.filter((school) => allPlayers.some((player) => player.schoolId === school.id && player.image))
+export const players = allPlayers.filter((player) => schools.some((school) => school.id === player.schoolId))
 
 export const schoolMap = Object.fromEntries(schools.map((school) => [school.id, school]))
