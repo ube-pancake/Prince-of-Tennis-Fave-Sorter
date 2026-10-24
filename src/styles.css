@@ -165,6 +165,7 @@ html[lang="ja"] .candidate-copy h2 { overflow-wrap: anywhere; font-size: clamp(3
 .tie-action button kbd { margin-left: auto; border-color: rgba(11,16,13,.35); color: currentColor; background: rgba(11,16,13,.12); box-shadow: none; }
 .tie-action .neither-button kbd { border-color: var(--line); background: var(--wash); }
 .tie-action p { color: var(--muted); font-size: 11px; }
+.tie-action .tiebreak-note { padding: 14px 20px; color: var(--accent-ink); background: var(--accent); font-size: 14px; text-align: center; }
 .tie-action p kbd { min-width: 20px; height: 20px; box-shadow: none; }
 
 .results-hero { display: grid; grid-template-columns: 1fr 280px; align-items: end; min-height: 430px; padding: 60px 0; border-bottom: 1px solid var(--line); }

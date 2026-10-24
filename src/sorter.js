@@ -11,18 +11,46 @@ export const createSortState = (ids) => ({
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 
+const resetMerge = (state, runs) => {
+  state.runs = runs
+  state.nextRuns = []
+  state.pairIndex = 0
+  state.leftIndex = 0
+  state.rightIndex = 0
+  state.merged = []
+}
+
+// Once the main sort finishes, each tied group is sorted again on its own
+// (left/right only) and spliced back in, so the final ranking has no ties.
 const normalize = (input) => {
   const state = clone(input)
   state.rejected ??= []
 
+  for (;;) {
+    mergeRuns(state)
+    if (state.runs.length > 1) return state
+
+    if (state.tiebreak) {
+      state.final.splice(state.tiebreak.index, 1, ...(state.runs[0] ?? []))
+      state.tiebreak = null
+    }
+    const final = state.final ?? state.runs[0] ?? []
+    const index = final.findIndex((group) => group.length > 1)
+    if (index === -1) {
+      state.runs = [final]
+      state.final = null
+      return state
+    }
+    state.final = final
+    state.tiebreak = { index }
+    resetMerge(state, final[index].map((id) => [[id]]))
+  }
+}
+
+const mergeRuns = (state) => {
   while (state.runs.length > 1) {
     if (state.pairIndex >= state.runs.length) {
-      state.runs = state.nextRuns
-      state.nextRuns = []
-      state.pairIndex = 0
-      state.leftIndex = 0
-      state.rightIndex = 0
-      state.merged = []
+      resetMerge(state, state.nextRuns)
       continue
     }
 
@@ -44,10 +72,8 @@ const normalize = (input) => {
       state.merged = []
       continue
     }
-    return state
+    return
   }
-
-  return state
 }
 
 export const currentPair = (input) => {
@@ -65,6 +91,7 @@ export const currentPair = (input) => {
 export const applyChoice = (input, choice) => {
   const { state, pair } = currentPair(input)
   if (!pair) return state
+  if (state.tiebreak && choice !== 'left' && choice !== 'right') return input
 
   if (choice === 'left') {
     state.merged.push(pair[0])

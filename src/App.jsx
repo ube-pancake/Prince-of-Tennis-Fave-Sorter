@@ -170,6 +170,12 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
         <CandidateCard ids={pair[1]} side="right" onChoose={() => onChoice('right')} language={language} t={t} />
       </section>
 
+      {state.tiebreak ? (
+      <section className="tie-action">
+        <p className="tiebreak-note"><strong>{t.sorting.tiebreak}</strong> {t.sorting.tiebreakHint}</p>
+        <p>{t.sorting.left} <kbd>H</kbd> · {t.sorting.right} <kbd>L</kbd></p>
+      </section>
+      ) : (
       <section className="tie-action">
         <div className="choice-buttons">
           <button className="tie-button" onClick={() => onChoice('tie')}>
@@ -185,6 +191,7 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
         </div>
         <p>{t.sorting.left} <kbd>H</kbd> · {t.sorting.tieShort} <kbd>K</kbd> · {t.sorting.neitherShort} <kbd>N</kbd> · {t.sorting.right} <kbd>L</kbd></p>
       </section>
+      )}
     </main>
   )
 }
@@ -385,8 +392,9 @@ export default function App() {
 
   const choose = useCallback((choice) => {
     if (!sortState) return
-    setHistory((items) => [...items, sortState])
     const next = applyChoice(sortState, choice)
+    if (next === sortState) return
+    setHistory((items) => [...items, sortState])
     setSortState(next)
     if (getResult(next)) {
       setPhase('results')

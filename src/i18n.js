@@ -30,6 +30,7 @@ export const translations = {
       comparison: 'Comparison', sorted: 'sorted', undo: 'Undo', save: 'Save', saved: 'Saved',
       likeBoth: 'Like both?', tie: 'Call it a tie', likeNeither: 'Like neither?', neither: 'Choose neither',
       left: 'Left', right: 'Right', tieShort: 'Tie', neitherShort: 'Neither',
+      tiebreak: 'Tiebreaker.', tiebreakHint: 'You tied these earlier — now pick the one you like more.',
     },
     results: {
       tiedWith: 'tied with', finalOrder: 'Your final order', gameSet: 'Game, set,',
@@ -76,6 +77,7 @@ export const translations = {
       comparison: '比較', sorted: '完了', undo: '元に戻す', save: '保存', saved: '保存済み',
       likeBoth: '両方好き？', tie: '同率にする', likeNeither: 'どちらも違う？', neither: 'どちらも選ばない',
       left: '左', right: '右', tieShort: '同率', neitherShort: 'どちらも選ばない',
+      tiebreak: 'タイブレーク。', tiebreakHint: '以前同率にしたキャラです。より好きな方を選んでください。',
     },
     results: {
       tiedWith: '同率', finalOrder: '最終ランキング', gameSet: 'ゲーム、セット、',
