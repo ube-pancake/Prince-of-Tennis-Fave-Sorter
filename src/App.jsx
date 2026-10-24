@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { coverPosition, imageSourcesFor } from './crop.js'
 import { players, schools, schoolMap } from './data.js'
+import { buildRankingImage } from './rankingImage.js'
 import { translations } from './i18n.js'
 import { applyChoice, createSortState, currentPair, estimateComparisons, getResult } from './sorter.js'
 
@@ -49,18 +51,43 @@ function Header({ dark, language, onToggleDark, onToggleLanguage, phase, t }) {
 
 function Portrait({ player, compact = false, language = 'en' }) {
   const [imageIndex, setImageIndex] = useState(0)
+  const [objectPosition, setObjectPosition] = useState(`${player.focus[0]}% ${player.focus[1]}%`)
+  const imageRef = useRef(null)
   const school = schoolMap[player.schoolId]
   const displayName = playerName(player, language)
   const initials = language === 'ja'
     ? displayName.replace(/\s+/g, '').slice(0, 2)
     : displayName.split(/\s+/).map((part) => part[0]).slice(0, 2).join('')
-  const imageSources = [player.image, player.image.replace(/\.webp$/i, '.png'), player.image.replace(/\.webp$/i, '.jpg')]
+  const imageSources = imageSourcesFor(player)
   const hasImageSource = imageIndex < imageSources.length
-  useEffect(() => setImageIndex(0), [player.id])
+
+  const centerFace = useCallback(() => {
+    const image = imageRef.current
+    if (!image?.naturalWidth || !image.clientWidth) return
+    setObjectPosition(coverPosition(image.naturalWidth, image.naturalHeight, image.clientWidth, image.clientHeight, player.focus[0], player.focus[1]))
+  }, [player])
+
+  useEffect(() => {
+    setImageIndex(0)
+    setObjectPosition(`${player.focus[0]}% ${player.focus[1]}%`)
+  }, [player])
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (!image) return undefined
+    if (typeof ResizeObserver === 'function') {
+      const observer = new ResizeObserver(centerFace)
+      observer.observe(image)
+      return () => observer.disconnect()
+    }
+    window.addEventListener('resize', centerFace)
+    return () => window.removeEventListener('resize', centerFace)
+  }, [centerFace, imageIndex])
+
   return (
     <div className={`portrait ${compact ? 'portrait--compact' : ''}`} style={{ '--team': school.color, '--team-accent': school.accent }}>
       <div className="court-lines" aria-hidden="true"><span /><span /></div>
-      {hasImageSource && <img src={imageSources[imageIndex]} alt="" onError={() => setImageIndex((current) => current + 1)} />}
+      {hasImageSource && <img ref={imageRef} src={imageSources[imageIndex]} alt="" style={{ objectPosition }} onLoad={centerFace} onError={() => setImageIndex((current) => current + 1)} />}
       {!hasImageSource && <span className="portrait-initials">{initials}</span>}
       <span className="portrait-code">{school.short}</span>
     </div>
@@ -196,6 +223,45 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
   )
 }
 
+// In-app browsers (Messenger, Facebook, Instagram, LINE…) usually ignore file
+// downloads, so they get a preview to long-press and save instead.
+function detectBrowser() {
+  const ua = navigator.userAgent || ''
+  return {
+    inApp: /FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|\bLine\/|MicroMessenger|KAKAOTALK|Snapchat|BytedanceWebview|musical_ly|Twitter/i.test(ua),
+    line: /\bLine\//i.test(ua),
+    mobile: /Android|iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1),
+  }
+}
+
+function ImagePreview({ image, onClose, t }) {
+  const browser = detectBrowser()
+  const externalUrl = () => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('openExternalBrowser', '1')
+    return url.toString()
+  }
+  useEffect(() => {
+    const onKeyDown = (event) => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+  return (
+    <div className="image-preview" role="dialog" aria-modal="true" aria-label={t.results.previewTitle} onClick={onClose}>
+      <div className="image-preview-inner" onClick={(event) => event.stopPropagation()}>
+        <p className="image-preview-hint">{t.results.longPressHint}</p>
+        <img src={image.dataUrl} alt={t.results.previewTitle} />
+        {browser.inApp && <p className="image-preview-note">{t.results.inAppNote}</p>}
+        <div className="image-preview-actions">
+          {browser.line && <a className="secondary-button" href={externalUrl()}>{t.results.openInBrowser}</a>}
+          <a className="secondary-button" href={image.dataUrl} download="court-order-ranking.png">{t.results.saveFile}</a>
+          <button className="primary-button" onClick={onClose}>{t.results.close}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ResultRow({ group, rank, podium, language, t }) {
   const lead = playerMap[group[0]]
   return (
@@ -241,39 +307,53 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
   const copyList = () => copyValue(ranked.map(({ group, rank: itemRank }) => `${itemRank}. ${group.map((id) => playerName(playerMap[id], language)).join(' = ')}`).join('\n'), t.results.rankingCopied)
   const copyLink = () => copyValue(shareUrl(), t.results.linkCopied)
 
-  const downloadImage = () => {
-    const canvas = document.createElement('canvas')
-    const canvasFont = language === 'ja' ? '"Yu Gothic UI", Meiryo, sans-serif' : 'Arial, sans-serif'
-    canvas.width = 1200
-    canvas.height = 1500
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#f2f3ed'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = '#cfff45'
-    ctx.fillRect(70, 70, 1060, 14)
-    ctx.fillStyle = '#121914'
-    ctx.font = `900 96px ${canvasFont}`
-    ctx.fillText('COURT ORDER', 70, 190)
-    ctx.font = `28px ${canvasFont}`
-    ctx.fillStyle = '#5d655f'
-    ctx.fillText(t.results.imageHeading, 74, 240)
-    ranked.slice(0, 15).forEach(({ group, rank: itemRank }, index) => {
-      const y = 330 + index * 70
-      ctx.fillStyle = index < 3 ? '#121914' : '#d7dbd3'
-      ctx.fillRect(70, y - 42, 1060, 56)
-      ctx.fillStyle = index < 3 ? '#cfff45' : '#121914'
-      ctx.font = `700 23px ${canvasFont}`
-      ctx.fillText(String(itemRank).padStart(2, '0'), 94, y - 5)
-      ctx.fillStyle = index < 3 ? '#ffffff' : '#121914'
-      ctx.fillText(group.map((id) => playerName(playerMap[id], language)).join(' = '), 170, y - 5)
-    })
-    ctx.fillStyle = '#5d655f'
-    ctx.font = `20px ${canvasFont}`
-    ctx.fillText(t.results.imageFooter, 70, 1450)
+  // Build the image as soon as the results show, so the share sheet can open
+  // straight from the tap (iOS rejects navigator.share after a slow async gap).
+  const imageKey = `${language}|${groups.map((group) => group.join('~')).join(',')}`
+  const [rankingImage, setRankingImage] = useState(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    setRankingImage(null)
+    if (!hasRankedCharacters) return undefined
+    const entries = ranked.map(({ group, rank: itemRank }) => ({ player: { ...playerMap[group[0]], label: playerName(playerMap[group[0]], language) }, rank: itemRank }))
+    buildRankingImage({ entries, title: 'COURT ORDER', heading: t.results.imageHeading, footer: t.results.imageFooter, schoolName: (id) => t.schools[id], language })
+      .then((image) => { if (!cancelled) setRankingImage(image) })
+      .catch(() => { if (!cancelled) setNotice(t.results.imageFailed) })
+    return () => { cancelled = true }
+  }, [imageKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const downloadImage = async () => {
+    if (!rankingImage) {
+      setNotice(t.results.imagePreparing)
+      return
+    }
+    const { dataUrl, blob } = rankingImage
+    const browser = detectBrowser()
+    if (browser.inApp) {
+      setPreviewOpen(true)
+      return
+    }
+    if (browser.mobile) {
+      const file = blob && typeof File === 'function' ? new File([blob], 'court-order-ranking.png', { type: 'image/png' }) : null
+      if (file && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] })
+          return
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+        }
+      }
+      setPreviewOpen(true)
+      return
+    }
     const link = document.createElement('a')
     link.download = 'court-order-ranking.png'
-    link.href = canvas.toDataURL('image/png')
+    link.href = blob ? URL.createObjectURL(blob) : dataUrl
+    document.body.appendChild(link)
     link.click()
+    link.remove()
+    if (blob) window.setTimeout(() => URL.revokeObjectURL(link.href), 4000)
     setNotice(t.results.imageDownloaded)
   }
 
@@ -321,6 +401,7 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
           </div>
         </aside>
       </section>
+      {previewOpen && rankingImage && <ImagePreview image={rankingImage} onClose={() => setPreviewOpen(false)} t={t} />}
     </main>
   )
 }
