@@ -6,6 +6,10 @@ export const translations = {
       switchTheme: (dark) => `Switch to ${dark ? 'light' : 'dark'} mode`,
       switchLanguage: 'Switch to Japanese',
       languageButton: '日本語',
+      navigation: 'Site', about: 'About', contact: 'Contact',
+    },
+    about: {
+      madeBy: 'Made by ube',
     },
     schools: {
       seigaku: 'Seigaku', fudomine: 'Fudomine', rudolph: 'St. Rudolph', yamabuki: 'Yamabuki',
@@ -59,6 +63,10 @@ export const translations = {
       switchTheme: (dark) => `${dark ? 'ライト' : 'ダーク'}モードに切り替える`,
       switchLanguage: 'Switch to English',
       languageButton: 'EN',
+      navigation: 'サイト', about: 'About', contact: 'Contact',
+    },
+    about: {
+      madeBy: '制作：ube',
     },
     schools: {
       seigaku: '青春学園', fudomine: '不動峰', rudolph: '聖ルドルフ', yamabuki: '山吹',

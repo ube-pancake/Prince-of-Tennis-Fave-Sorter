@@ -30,7 +30,29 @@ function BrandMark() {
   return <div className="brand-mark" aria-hidden="true"><span /><span /></div>
 }
 
-function Header({ dark, language, onToggleDark, onToggleLanguage, phase, t }) {
+const WAVEBOX_URL = 'https://wavebox.me/wave/6vf81qelg8m318zr/'
+const GITHUB_URL = 'https://github.com/ube-pancake'
+
+function AboutDialog({ onClose, t }) {
+  useEffect(() => {
+    const onKeyDown = (event) => { if (event.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+  return (
+    <div className="image-preview" role="dialog" aria-modal="true" aria-labelledby="about-title" onClick={onClose}>
+      <div className="image-preview-inner about-dialog" onClick={(event) => event.stopPropagation()}>
+        <h2 id="about-title">{t.header.about}</h2>
+        <p>{t.about.madeBy} <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">{GITHUB_URL.replace('https://', '')}</a></p>
+        <div className="image-preview-actions">
+          <button className="primary-button" onClick={onClose}>{t.results.close}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Header({ dark, language, onToggleDark, onToggleLanguage, onAbout, phase, t }) {
   return (
     <header className="site-header">
       <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={t.header.home}>
@@ -38,6 +60,10 @@ function Header({ dark, language, onToggleDark, onToggleLanguage, phase, t }) {
         <span>COURT ORDER</span>
       </button>
       <div className="header-meta">
+        <nav className="header-nav" aria-label={t.header.navigation}>
+          <button onClick={onAbout}>{t.header.about}</button>
+          <a href={WAVEBOX_URL} target="_blank" rel="noopener noreferrer">{t.header.contact}</a>
+        </nav>
         <span className="phase-label">{t.phase[phase]}</span>
         <button className="language-button" onClick={onToggleLanguage} aria-label={t.header.switchLanguage} lang={language === 'en' ? 'ja' : 'en'}>
           {t.header.languageButton}
@@ -469,6 +495,7 @@ export default function App() {
   const [history, setHistory] = useState([])
   const [savedAt, setSavedAt] = useState(null)
   const [hasSave, setHasSave] = useState(() => Boolean(storage.get(STORAGE_KEY)))
+  const [aboutOpen, setAboutOpen] = useState(false)
   const resultGroups = sharedResult || (sortState ? getResult(sortState) : null)
   const selectedCount = players.filter((player) => selected.includes(player.schoolId)).length
   const t = translations[language]
@@ -559,6 +586,7 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event) => {
+      if (aboutOpen) return
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
       // Leave browser shortcuts (Ctrl+S, Cmd+1…) alone and don't repeat picks while a key is held.
       if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return
@@ -579,11 +607,12 @@ export default function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [phase, start, choose, undo, save, load, hasSave])
+  }, [phase, start, choose, undo, save, load, hasSave, aboutOpen])
 
   return (
     <div className="app">
-      <Header dark={dark} language={language} onToggleDark={() => setDark((value) => !value)} onToggleLanguage={() => setLanguage((value) => value === 'en' ? 'ja' : 'en')} phase={phase} t={t} />
+      <Header dark={dark} language={language} onToggleDark={() => setDark((value) => !value)} onToggleLanguage={() => setLanguage((value) => value === 'en' ? 'ja' : 'en')} onAbout={() => setAboutOpen(true)} phase={phase} t={t} />
+      {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} t={t} />}
       {phase === 'setup' && <Setup selected={selected} setSelected={setSelected} onStart={start} onLoad={load} hasSave={hasSave} t={t} />}
       {phase === 'sorting' && sortState && <Sorting sortState={sortState} count={selectedCount} onChoice={choose} onUndo={undo} canUndo={history.length > 0} onSave={save} savedAt={savedAt} language={language} t={t} />}
       {phase === 'results' && resultGroups && <Results groups={resultGroups} rejectedIds={sortState?.rejected || []} onRestart={restart} language={language} t={t} />}
@@ -591,7 +620,7 @@ export default function App() {
         <span>COURT ORDER</span><span>{t.footer}</span>
         <p className="footer-support">
           {t.support}{' '}
-          <span aria-hidden="true">🎾</span> <a href="https://wavebox.me/wave/6vf81qelg8m318zr/" target="_blank" rel="noopener noreferrer">wavebox</a> <span aria-hidden="true">🎾</span>
+          <span aria-hidden="true">🎾</span> <a href={WAVEBOX_URL} target="_blank" rel="noopener noreferrer">wavebox</a> <span aria-hidden="true">🎾</span>
         </p>
       </footer>
     </div>
