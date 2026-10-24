@@ -215,6 +215,10 @@ html[lang="ja"] .candidate-copy h2 { overflow-wrap: anywhere; font-size: clamp(3
 
 footer { display: flex; align-items: center; justify-content: space-between; width: min(1180px, calc(100% - 48px)); min-height: 86px; margin: 0 auto; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 footer span:first-child { color: var(--ink); font-weight: 900; }
+footer { flex-wrap: wrap; row-gap: 10px; padding: 22px 0; }
+.footer-support { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 13px; letter-spacing: 0; line-height: 1.6; text-align: center; text-transform: none; }
+.footer-support a { color: var(--ink); font-weight: 800; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; text-underline-offset: 3px; }
+.footer-support a:hover { background: var(--accent); color: var(--accent-ink); }
 
 @media (max-width: 1100px) {
   .phase-label { display: none; }

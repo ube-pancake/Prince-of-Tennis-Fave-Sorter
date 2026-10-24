@@ -536,7 +536,13 @@ export default function App() {
       {phase === 'setup' && <Setup selected={selected} setSelected={setSelected} onStart={start} onLoad={load} hasSave={hasSave} t={t} />}
       {phase === 'sorting' && sortState && <Sorting sortState={sortState} count={selectedCount} onChoice={choose} onUndo={undo} canUndo={history.length > 0} onSave={save} savedAt={savedAt} language={language} t={t} />}
       {phase === 'results' && resultGroups && <Results groups={resultGroups} rejectedIds={sortState?.rejected || []} onRestart={restart} language={language} t={t} />}
-      <footer><span>COURT ORDER</span><span>{t.footer}</span></footer>
+      <footer>
+        <span>COURT ORDER</span><span>{t.footer}</span>
+        <p className="footer-support">
+          {t.support}{' '}
+          <span aria-hidden="true">🎾</span> <a href="https://wavebox.me/wave/6vf81qelg8m318zr/" target="_blank" rel="noopener noreferrer">wavebox</a> <span aria-hidden="true">🎾</span>
+        </p>
+      </footer>
     </div>
   )
 }

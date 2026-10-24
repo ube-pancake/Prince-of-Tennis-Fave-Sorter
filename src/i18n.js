@@ -49,6 +49,7 @@ export const translations = {
       openInBrowser: 'Open in browser', saveFile: 'Save as file', close: 'Close',
     },
     footer: 'Choose fast. Trust the ranking.',
+    support: 'For any bugs or errors please leave a message on my wavebox. Support & thanks also appreciated!',
   },
   ja: {
     phase: { setup: '選手を選ぶ', sorting: 'ランキング中', results: '最終結果' },
@@ -100,5 +101,6 @@ export const translations = {
       openInBrowser: 'ブラウザで開く', saveFile: 'ファイルとして保存', close: '閉じる',
     },
     footer: '迷わず選んで、ランキングを信じよう。',
+    support: '不具合やエラーがあれば、wavebox にメッセージをお願いします。応援や感謝のメッセージも大歓迎です！',
   },
 }
