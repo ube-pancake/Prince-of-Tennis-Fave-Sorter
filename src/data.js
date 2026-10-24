@@ -240,9 +240,9 @@ const allPlayers = Object.entries(roster).flatMap(([schoolId, names]) =>
   })),
 )
 
-// Teams without a single portrait yet (e.g. Foreign Teams, Other) stay in the roster above but are
-// hidden from the site. Each one shows up automatically once its first photo is added.
-export const schools = allSchools.filter((school) => allPlayers.some((player) => player.schoolId === school.id && player.image))
-export const players = allPlayers.filter((player) => schools.some((school) => school.id === player.schoolId))
+// Characters without a portrait yet stay in the roster above but are hidden from the site, as are
+// teams left with nobody to show. They appear automatically once their photo is added.
+export const players = allPlayers.filter((player) => player.image)
+export const schools = allSchools.filter((school) => players.some((player) => player.schoolId === school.id))
 
 export const schoolMap = Object.fromEntries(schools.map((school) => [school.id, school]))
