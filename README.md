@@ -1,6 +1,9 @@
 # Court Order
 
-A fast, local-first Prince of Tennis character sorter inspired by Better Nijisort.
+Rank & Sort!
+<br>
+<br>
+Link: https://ube-pancake.github.io/Prince-of-Tennis-Fave-Sorter/
 
 ## Run locally
 
