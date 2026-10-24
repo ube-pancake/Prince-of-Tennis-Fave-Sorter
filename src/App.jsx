@@ -307,7 +307,8 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
     ranked.push({ group, rank })
     rank += group.length
   })
-  const top = ranked[0]?.group.map((id) => playerName(playerMap[id], language)).join(' & ')
+  // The big heading uses just the family name in English ("ATOBE."); Japanese names are short enough to show in full.
+  const top = ranked[0]?.group.map((id) => language === 'ja' ? playerName(playerMap[id], language) : playerMap[id].name.split(/\s+/).pop()).join(' & ')
   const hasRankedCharacters = ranked.length > 0
   const rejectedPlayers = rejectedIds.map((id) => playerMap[id]).filter(Boolean)
 
