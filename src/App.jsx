@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { coverPosition, imageSourcesFor } from './crop.js'
 import { players, schools, schoolMap } from './data.js'
 import { buildRankingImage } from './rankingImage.js'
@@ -50,9 +50,24 @@ function Header({ dark, language, onToggleDark, onToggleLanguage, phase, t }) {
   )
 }
 
+// Warms the browser cache so the next portrait can be cropped and shown without a visible jump.
+function preloadPortrait(player) {
+  const sources = imageSourcesFor(player)
+  const tryNext = (index) => {
+    if (index >= sources.length) return
+    const image = new Image()
+    image.onerror = () => tryNext(index + 1)
+    image.src = sources[index]
+  }
+  tryNext(0)
+}
+
+// Callers key this by player id, so each character gets fresh state. The image stays hidden
+// until its face-centred crop is known, which avoids it sliding into place after it appears.
 function Portrait({ player, compact = false, language = 'en' }) {
   const [imageIndex, setImageIndex] = useState(0)
   const [objectPosition, setObjectPosition] = useState(`${player.focus[0]}% ${player.focus[1]}%`)
+  const [positioned, setPositioned] = useState(false)
   const imageRef = useRef(null)
   const school = schoolMap[player.schoolId]
   const displayName = playerName(player, language)
@@ -64,14 +79,15 @@ function Portrait({ player, compact = false, language = 'en' }) {
 
   const centerFace = useCallback(() => {
     const image = imageRef.current
-    if (!image?.naturalWidth || !image.clientWidth) return
-    setObjectPosition(coverPosition(image.naturalWidth, image.naturalHeight, image.clientWidth, image.clientHeight, player.focus[0], player.focus[1]))
+    if (!image?.naturalWidth) return
+    if (image.clientWidth) setObjectPosition(coverPosition(image.naturalWidth, image.naturalHeight, image.clientWidth, image.clientHeight, player.focus[0], player.focus[1]))
+    setPositioned(true)
   }, [player])
 
-  useEffect(() => {
-    setImageIndex(0)
-    setObjectPosition(`${player.focus[0]}% ${player.focus[1]}%`)
-  }, [player])
+  // A cached image is already complete before paint, so position it before it is ever shown.
+  useLayoutEffect(() => {
+    if (imageRef.current?.complete) centerFace()
+  }, [centerFace, imageIndex])
 
   useEffect(() => {
     const image = imageRef.current
@@ -88,7 +104,7 @@ function Portrait({ player, compact = false, language = 'en' }) {
   return (
     <div className={`portrait ${compact ? 'portrait--compact' : ''}`} style={{ '--team': school.color, '--team-accent': school.accent }}>
       <div className="court-lines" aria-hidden="true"><span /><span /></div>
-      {hasImageSource && <img ref={imageRef} src={imageSources[imageIndex]} alt="" style={{ objectPosition }} onLoad={centerFace} onError={() => setImageIndex((current) => current + 1)} />}
+      {hasImageSource && <img ref={imageRef} src={imageSources[imageIndex]} alt="" style={{ objectPosition, opacity: positioned ? 1 : 0 }} onLoad={centerFace} onError={() => setImageIndex((current) => current + 1)} />}
       {!hasImageSource && <span className="portrait-initials">{initials}</span>}
       <span className="portrait-code">{school.short}</span>
     </div>
@@ -160,7 +176,7 @@ function CandidateCard({ ids, side, onChoose, language, t }) {
   return (
     <button className={`candidate candidate--${side}`} onClick={onChoose} style={{ '--team': school.color, '--team-accent': school.accent }}>
       <div className="candidate-visual">
-        <Portrait player={player} language={language} />
+        <Portrait key={player.id} player={player} language={language} />
         {ids.length > 1 && <span className="tie-stack">{t.candidate.tiedCount(ids.length - 1)}</span>}
         <span className="pick-cue">{t.candidate.pick(side)}<Icon name="arrow" size={17} /></span>
       </div>
@@ -176,6 +192,14 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
   const { state, pair } = currentPair(sortState)
   const estimate = estimateComparisons(count)
   const percent = Math.min(98, Math.max(state.comparisons ? 1 : 0, Math.round((state.comparisons / estimate) * 100)))
+
+  // Whichever side is picked, the next card comes from the same run, so preload both candidates.
+  const upcoming = pair ? [state.runs[state.pairIndex]?.[state.leftIndex + 1], state.runs[state.pairIndex + 1]?.[state.rightIndex + 1]] : []
+  const upcomingKey = upcoming.map((group) => group?.[0] || '').join('|')
+  useEffect(() => {
+    upcomingKey.split('|').filter(Boolean).forEach((id) => playerMap[id] && preloadPortrait(playerMap[id]))
+  }, [upcomingKey])
+
   if (!pair) return null
 
   return (
@@ -268,7 +292,7 @@ function ResultRow({ group, rank, podium, language, t }) {
   return (
     <div className={`result-row ${podium ? 'result-row--podium' : ''}`}>
       <span className="result-rank">{String(rank).padStart(2, '0')}</span>
-      <Portrait player={lead} compact language={language} />
+      <Portrait key={lead.id} player={lead} compact language={language} />
       <div className="result-name">
         <strong>{playerName(lead, language)}</strong>
         <span>{t.schools[lead.schoolId]}{group.length > 1 ? ` · ${t.results.tiedWith} ${group.slice(1).map((id) => playerName(playerMap[id], language)).join(', ')}` : ''}</span>
@@ -411,37 +435,55 @@ function parseSharedResult() {
   if (!window.location.hash.startsWith('#result=')) return null
   try {
     const raw = decodeURIComponent(window.location.hash.slice(8))
-    const groups = raw.split(',').map((group) => group.split('~').filter((id) => playerMap[id])).filter((group) => group.length)
+    const seen = new Set()
+    const groups = raw.split(',')
+      .map((group) => group.split('~').filter((id) => playerMap[id] && !seen.has(id) && seen.add(id)))
+      .filter((group) => group.length)
     return groups.length ? groups : null
   } catch { return null }
 }
 
+// Storage can be missing or throw (private mode, some in-app browsers), so never let it crash the app.
+const storage = {
+  get: (key) => { try { return window.localStorage.getItem(key) } catch { return null } },
+  set: (key, value) => { try { window.localStorage.setItem(key, value) } catch { /* not saved */ } },
+  remove: (key) => { try { window.localStorage.removeItem(key) } catch { /* nothing to remove */ } },
+}
+
+// A saved sort is only usable if every character in it still exists in the roster.
+const isUsableSortState = (state) => {
+  const ids = [state?.runs, state?.nextRuns, state?.merged, state?.final, state?.rejected].flat(Infinity).filter((id) => id != null)
+  return Array.isArray(state?.runs) && ids.every((id) => typeof id === 'string' && playerMap[id])
+}
+
 export default function App() {
-  const sharedResult = useMemo(parseSharedResult, [])
-  const [dark, setDark] = useState(() => localStorage.getItem('court-order-theme') === 'dark')
-  const [language, setLanguage] = useState(() => localStorage.getItem('court-order-language') === 'ja' ? 'ja' : 'en')
-  const [phase, setPhase] = useState(sharedResult ? 'results' : 'setup')
+  const [sharedResult, setSharedResult] = useState(parseSharedResult)
+  const [dark, setDark] = useState(() => storage.get('court-order-theme') === 'dark')
+  const [language, setLanguage] = useState(() => storage.get('court-order-language') === 'ja' ? 'ja' : 'en')
+  const [phase, setPhase] = useState(() => sharedResult ? 'results' : 'setup')
   const [selected, setSelected] = useState(schools.map((school) => school.id))
   const [sortState, setSortState] = useState(null)
   const [history, setHistory] = useState([])
   const [savedAt, setSavedAt] = useState(null)
-  const [hasSave, setHasSave] = useState(() => Boolean(localStorage.getItem(STORAGE_KEY)))
+  const [hasSave, setHasSave] = useState(() => Boolean(storage.get(STORAGE_KEY)))
   const resultGroups = sharedResult || (sortState ? getResult(sortState) : null)
   const selectedCount = players.filter((player) => selected.includes(player.schoolId)).length
   const t = translations[language]
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-    localStorage.setItem('court-order-theme', dark ? 'dark' : 'light')
+    storage.set('court-order-theme', dark ? 'dark' : 'light')
   }, [dark])
 
   useEffect(() => {
     document.documentElement.lang = language
-    localStorage.setItem('court-order-language', language)
+    storage.set('court-order-language', language)
   }, [language])
 
   const start = useCallback(() => {
     const ids = players.filter((player) => selected.includes(player.schoolId)).map((player) => player.id)
+    if (ids.length < 2) return
+    setSharedResult(null)
     for (let i = ids.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[ids[i], ids[j]] = [ids[j], ids[i]]
@@ -455,21 +497,22 @@ export default function App() {
 
   const save = useCallback(() => {
     if (!sortState) return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ phase: 'sorting', selected, sortState }))
+    storage.set(STORAGE_KEY, JSON.stringify({ phase: 'sorting', selected, sortState }))
     setSavedAt(new Date())
     setHasSave(true)
   }, [selected, sortState])
 
   const load = useCallback(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
-      if (!saved?.sortState) return
+      const saved = JSON.parse(storage.get(STORAGE_KEY))
+      if (!isUsableSortState(saved?.sortState)) throw new Error('Saved sort no longer matches the roster')
+      setSharedResult(null)
       setSelected(saved.selected || schools.map((school) => school.id))
       setSortState(saved.sortState)
       setHistory([])
       setPhase(getResult(saved.sortState) ? 'results' : 'sorting')
       window.scrollTo(0, 0)
-    } catch { localStorage.removeItem(STORAGE_KEY); setHasSave(false) }
+    } catch { storage.remove(STORAGE_KEY); setHasSave(false) }
   }, [])
 
   const choose = useCallback((choice) => {
@@ -487,7 +530,7 @@ export default function App() {
         language,
       })
       setPhase('results')
-      localStorage.removeItem(STORAGE_KEY)
+      storage.remove(STORAGE_KEY)
       setHasSave(false)
       window.scrollTo(0, 0)
     }
@@ -503,6 +546,7 @@ export default function App() {
 
   const restart = useCallback(() => {
     window.history.replaceState(null, '', window.location.pathname)
+    setSharedResult(null)
     setPhase('setup')
     setSortState(null)
     setHistory([])
@@ -513,7 +557,11 @@ export default function App() {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
-      const key = event.key.toLowerCase()
+      // Leave browser shortcuts (Ctrl+S, Cmd+1…) alone and don't repeat picks while a key is held.
+      if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return
+      const key = (event.key || '').toLowerCase()
+      // Enter/Space on a focused button already clicks it.
+      if ((key === 'enter' || key === ' ') && event.target instanceof Element && event.target.closest('button, a')) return
       if (phase === 'setup') {
         if (key === 'enter' || key === 's') start()
         if (key === 'l' && hasSave) load()

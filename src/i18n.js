@@ -35,7 +35,7 @@ export const translations = {
     results: {
       tiedWith: 'tied with', finalOrder: 'Your final order', gameSet: 'Game, set,',
       noFavourites: 'No favourites', thisTime: 'this time.',
-      description: 'You made it through every matchup. Here’s the ranking your choices built—ties and all.',
+      description: 'You made it through every matchup. Here’s the ranking your choices built.',
       emptyDescription: 'Every matchup was marked neither, so there is no ranking to show.',
       emptyList: 'No characters made your favourites list.', notRanked: 'Not ranked', neitherPicks: 'Neither picks',
       rejectedDescription: 'These characters were excluded when you chose neither.',

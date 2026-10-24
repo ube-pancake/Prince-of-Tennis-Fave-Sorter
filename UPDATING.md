@@ -49,7 +49,13 @@ foreign
 other
 ```
 
-Use `.webp` or `.png` files and keep the names lowercase with hyphens. The app checks WebP first and then PNG, so WebP wins if both versions exist. The exact expected filename for every character is generated in `src/data.js`. Square or 4:5 portraits work best. A character automatically keeps the colored initials design until their matching image file exists.
+Use `.webp`, `.png` or `.jpg` files and keep the names lowercase with hyphens. If several versions exist, WebP wins, then PNG, then JPG. The exact expected filename for every character is generated from their name in `src/data.js`. A character keeps the colored initials design until a matching image file exists.
+
+Square portraits work best: about 1200 × 1200 px (at least 800 × 800), head and shoulders, with the face in the upper half.
+
+Each photo also has a face position in `faceFocus` in `src/data.js`, used to keep the face centered when the picture is cropped. A new photo without an entry is centered on the middle, upper third. If a face ends up cut off, add or adjust its entry: `[percent from left, percent from top]`.
+
+If `npm run dev` is running, restart it after adding photos.
 
 ### Optional: converting an image to WebP
 

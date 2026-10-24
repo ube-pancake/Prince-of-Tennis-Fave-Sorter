@@ -18,4 +18,4 @@ export const coverPosition = (imageWidth, imageHeight, boxWidth, boxHeight, fx, 
   return `${x.toFixed(1)}% ${y.toFixed(1)}%`
 }
 
-export const imageSourcesFor = (player) => [player.image, player.image.replace(/\.webp$/i, '.png'), player.image.replace(/\.webp$/i, '.jpg')]
+export const imageSourcesFor = (player) => (player.image ? [player.image] : [])

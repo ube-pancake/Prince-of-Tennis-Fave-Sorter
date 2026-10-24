@@ -1,3 +1,5 @@
+import portraits from 'virtual:portraits'
+
 export const schools = [
   { id: 'seigaku', name: 'Seigaku', short: 'SG', color: '#153fc0', accent: '#f5d23b' },
   { id: 'fudomine', name: 'Fudomine', short: 'FD', color: '#22282b', accent: '#f27b35' },
@@ -215,6 +217,17 @@ const faceFocus = {
 
 const slugify = (value) => value.toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
+// "team/slug" -> portrait file, preferring WebP, then PNG, then JPG when several exist.
+const formatOrder = ['webp', 'png', 'jpg', 'jpeg']
+const portraitFiles = {}
+portraits
+  .slice()
+  .sort((a, b) => formatOrder.indexOf(a.split('.').pop().toLowerCase()) - formatOrder.indexOf(b.split('.').pop().toLowerCase()))
+  .forEach((file) => {
+    const key = file.replace(/\.[^.]+$/, '')
+    portraitFiles[key] ??= file
+  })
+
 export const players = Object.entries(roster).flatMap(([schoolId, names]) =>
   names.map((name, index) => ({
     id: `${schoolId}-${slugify(name)}`,
@@ -222,7 +235,7 @@ export const players = Object.entries(roster).flatMap(([schoolId, names]) =>
     nameJa: japaneseNames[name],
     schoolId,
     seed: index,
-    image: `${import.meta.env.BASE_URL}players/${schoolId}/${slugify(name)}.webp`,
+    image: portraitFiles[`${schoolId}/${slugify(name)}`] ? `${import.meta.env.BASE_URL}players/${portraitFiles[`${schoolId}/${slugify(name)}`]}` : null,
     focus: faceFocus[`${schoolId}/${slugify(name)}`] ?? [50, 30],
   })),
 )
