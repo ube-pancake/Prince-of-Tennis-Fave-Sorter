@@ -154,8 +154,16 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
     ctx.fillStyle = INK
     ctx.font = `900 22px "Arial Black", Arial, sans-serif`
     ctx.fillText(String(rank).padStart(2, '0'), textX, y + 36)
-    ctx.font = `900 22px ${displayFont}`
-    const [name] = wrapText(ctx, language === 'ja' ? player.label : player.label.toUpperCase(), colW - (textX - x) - 62, 1)
+    const label = language === 'ja' ? player.label : player.label.toUpperCase()
+    const nameWidth = colW - (textX - x) - 62
+    // Shrink long names a little before resorting to an ellipsis.
+    let nameSize = 22
+    ctx.font = `900 ${nameSize}px ${displayFont}`
+    while (nameSize > 15 && ctx.measureText(label).width > nameWidth) {
+      nameSize -= 1
+      ctx.font = `900 ${nameSize}px ${displayFont}`
+    }
+    const [name] = wrapText(ctx, label, nameWidth, 1)
     ctx.fillText(name, textX + 46, y + 36)
     ctx.fillStyle = MUTED
     ctx.font = `700 16px ${font}`
