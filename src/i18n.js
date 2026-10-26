@@ -14,7 +14,9 @@ export const translations = {
     schools: {
       seigaku: 'Seigaku', fudomine: 'Fudomine', rudolph: 'St. Rudolph', yamabuki: 'Yamabuki',
       hyoutei: 'Hyoutei', rokkaku: 'Rokkaku', rikkai: 'Rikkai', higa: 'Higa',
-      shiten: 'Shitenhoji', u17: 'U-17', foreign: 'Foreign Teams', other: 'Other',
+      shiten: 'Shitenhoji', u17: 'U-17',
+      australia: 'Australia', england: 'England', france: 'France', greece: 'Greece', switzerland: 'Switzerland', usa: 'USA',
+      foreign: 'Foreign Teams', other: 'Other',
     },
     setup: {
       heroStart: 'Rank the', heroAccent: 'court.',
@@ -71,7 +73,9 @@ export const translations = {
     schools: {
       seigaku: '青春学園', fudomine: '不動峰', rudolph: '聖ルドルフ', yamabuki: '山吹',
       hyoutei: '氷帝', rokkaku: '六角', rikkai: '立海', higa: '比嘉',
-      shiten: '四天宝寺', u17: 'U-17', foreign: '海外チーム', other: 'その他',
+      shiten: '四天宝寺', u17: 'U-17',
+      australia: 'オーストラリア', england: 'イギリス', france: 'フランス', greece: 'ギリシャ', switzerland: 'スイス', usa: 'アメリカ',
+      foreign: '海外チーム', other: 'その他',
     },
     setup: {
       heroStart: 'コートを', heroAccent: 'ランキング。',
