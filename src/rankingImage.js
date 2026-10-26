@@ -139,7 +139,7 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
     lines.forEach((line, lineIndex) => ctx.fillText(line, x, podiumTop + tileH + 42 + lineIndex * 34))
     ctx.fillStyle = MUTED
     ctx.font = `700 18px ${font}`
-    ctx.fillText(schoolName(player.schoolId), x, podiumTop + tileH + 42 + lines.length * 34 + 6)
+    ctx.fillText(wrapText(ctx, schoolName(player), tileW, 1)[0], x, podiumTop + tileH + 42 + lines.length * 34 + 6)
   })
 
   rest.forEach(({ player, rank }, index) => {
@@ -167,7 +167,7 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
     ctx.fillText(name, textX + 46, y + 36)
     ctx.fillStyle = MUTED
     ctx.font = `700 16px ${font}`
-    ctx.fillText(schoolName(player.schoolId), textX + 46, y + 64)
+    ctx.fillText(wrapText(ctx, schoolName(player), nameWidth, 1)[0], textX + 46, y + 64)
   })
 
   ctx.fillStyle = MUTED

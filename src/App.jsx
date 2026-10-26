@@ -9,6 +9,8 @@ import { applyChoice, createSortState, currentPair, estimateComparisons, getResu
 const STORAGE_KEY = 'court-order-progress-v1'
 const playerMap = Object.fromEntries(players.map((player) => [player.id, player]))
 const playerName = (player, language) => language === 'ja' && player.nameJa ? player.nameJa : player.name
+// The school / role line under a name: a character's own affiliation if known, otherwise the team.
+const teamLabel = (player, language, t) => player.affiliation?.[language] || t.schools[player.schoolId]
 
 function Icon({ name, size = 20 }) {
   const paths = {
@@ -207,7 +209,7 @@ function CandidateCard({ ids, side, onChoose, language, t }) {
         <span className="pick-cue">{t.candidate.pick(side)}<Icon name="arrow" size={17} /></span>
       </div>
       <div className="candidate-copy">
-        <span className="candidate-school">{t.schools[school.id]}</span>
+        <span className="candidate-school">{teamLabel(player, language, t)}</span>
         <h2>{playerName(player, language)}</h2>
       </div>
     </button>
@@ -318,7 +320,7 @@ function ResultRow({ group, rank, podium, language, t }) {
       <Portrait key={lead.id} player={lead} compact language={language} />
       <div className="result-name">
         <strong>{playerName(lead, language)}</strong>
-        <span>{t.schools[lead.schoolId]}{group.length > 1 ? ` · ${t.results.tiedWith} ${group.slice(1).map((id) => playerName(playerMap[id], language)).join(', ')}` : ''}</span>
+        <span>{teamLabel(lead, language, t)}{group.length > 1 ? ` · ${t.results.tiedWith} ${group.slice(1).map((id) => playerName(playerMap[id], language)).join(', ')}` : ''}</span>
       </div>
       <span className="result-seed">{schoolMap[lead.schoolId].short}</span>
     </div>
@@ -391,7 +393,7 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
       title: 'COURT ORDER',
       heading: t.results.imageHeading,
       footer: t.results.imageFooter,
-      schoolName: (id) => t.schools[id],
+      schoolName: (player) => teamLabel(player, language, t),
       language,
       siteUrl: `${window.location.origin}${window.location.pathname}`,
       scanCaption: t.results.scanToPlay,

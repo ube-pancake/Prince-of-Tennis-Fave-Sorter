@@ -208,6 +208,39 @@ const japaneseNames = {
   'Takeshi Konomi': '許斐 剛',
 }
 
+// School / role shown instead of the team name for characters on the catch-all "Other" team: [English, Japanese].
+const affiliations = {
+  'Satoshi Horio': ['Seigaku, 1st year', '青学1年生'],
+  'Kachiro Kato': ['Seigaku, 1st year', '青学1年生'],
+  'Katsuo Mizuno': ['Seigaku, 1st year', '青学1年生'],
+  'Masashi Arai': ['Seigaku, 2nd year', '青学2年生'],
+  'Tomoka Osakada': ['Seigaku, 1st year', '青学1年生'],
+  'An Tachibana': ['Fudomine, 2nd year', '不動峰中2年生'],
+  'Nyudo Mifune': ['U-17 Japan head coach', 'U-17日本代表監督'],
+  'Itaru Saito': ['U-17 Japan mental coach', 'U-17日本代表精神コーチ'],
+  'Yukio Kurobe': ['U-17 Japan strategy coach', 'U-17日本代表戦略コーチ'],
+  'Ryuji Tsuge': ['U-17 Japan circuit coach', 'U-17日本代表サーキットコーチ'],
+  'Taro Sakaki': ['Hyoutei advisor', '氷帝学園中顧問'],
+  'Osamu Watanabe': ['Shitenhoji advisor', '四天宝寺中顧問'],
+  'Harumi Saotome': ['Higa tennis club advisor', '比嘉中テニス部顧問'],
+  'M. Nobtail': ['Tsube Republic, HS 3rd year', 'ツベ共和国代表高校3年生'],
+  'Tetsuo Ushida': ['Rokurigaoka, 3rd year', '六里ヶ丘中3年生'],
+  'Liliadent Krauser': ['Nagoya Seitoku, 1st year', '名古屋星徳中1年生'],
+  'Kiichi Kuki': ['Kakinoki, 3rd year', '柿ノ木中3年生'],
+  'Satoru Kadowaki': ['Makinofuji, 3rd year', '牧ノ藤中3年生'],
+  'Daikichi Daimaru': ['Shishigaku, 3rd year', '獅子楽中3年生'],
+  'Wataru Kitamura': ['Midoriyama, 2nd year', '緑山中2年生'],
+  'Akane Tsuta': ['Midoriyama, 2nd year', '緑山中2年生'],
+  'Takuma Minamoto': ['Midoriyama, 2nd year', '緑山中2年生'],
+  'Itto Habu': ['Midoriyama, 2nd year', '緑山中2年生'],
+  'Masato Takase': ['Midoriyama, 2nd year', '緑山中2年生'],
+  'Goki Domoto': ['Ginka, 3rd year', '銀華中3年生'],
+  'Masaji Tashiro': ['Ginka, 3rd year', '銀華中3年生'],
+  'Michiru Fukushi': ['Ginka, 3rd year', '銀華中3年生'],
+  'Yasuharu Suzuki': ['Ginka, 3rd year', '銀華中3年生'],
+  'Takeshi Konomi': ['Creator of The Prince of Tennis', '原作者'],
+}
+
 // Face centre of each portrait as [x%, y%] of the image, used to keep faces in frame when cropping.
 const faceFocus = {
   'fudomine/akira-kamio': [55, 23],
@@ -374,6 +407,7 @@ const allPlayers = Object.entries(roster).flatMap(([schoolId, names]) =>
     id: `${schoolId}-${slugify(name)}`,
     name,
     nameJa: japaneseNames[name],
+    affiliation: affiliations[name] ? { en: affiliations[name][0], ja: affiliations[name][1] } : null,
     schoolId,
     seed: index,
     image: portraitFiles[`${schoolId}/${slugify(name)}`] ? `${import.meta.env.BASE_URL}players/${portraitFiles[`${schoolId}/${slugify(name)}`]}` : null,
