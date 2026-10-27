@@ -261,7 +261,7 @@ const faceFocus = {
   'higa/yujiro-kai': [50, 26],
   'hyoutei/chotaro-ohtori': [66, 31],
   'hyoutei/gakuto-mukahi': [62, 38],
-  'hyoutei/haginosuke-taki': [40, 37],
+  'hyoutei/haginosuke-taki': [58, 80],
   'hyoutei/jiro-akutagawa': [39, 33],
   'hyoutei/keigo-atobe': [52, 44],
   'hyoutei/munehiro-kabaji': [40, 37],
