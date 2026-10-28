@@ -104,7 +104,7 @@ function preloadPortrait(player) {
 
 // Callers key this by player id, so each character gets fresh state. The image stays hidden
 // until its face-centred crop is known, which avoids it sliding into place after it appears.
-function Portrait({ player, compact = false, language = 'en' }) {
+function Portrait({ player, compact = false, fill = false, language = 'en' }) {
   const [imageIndex, setImageIndex] = useState(0)
   const [objectPosition, setObjectPosition] = useState(`${player.focus[0]}% ${player.focus[1]}%`)
   const [positioned, setPositioned] = useState(false)
@@ -142,7 +142,7 @@ function Portrait({ player, compact = false, language = 'en' }) {
   }, [centerFace, imageIndex])
 
   return (
-    <div className={`portrait ${compact ? 'portrait--compact' : ''}`} style={{ '--team': school.color, '--team-accent': school.accent }}>
+    <div className={`portrait ${compact ? 'portrait--compact' : ''} ${fill ? 'portrait--fill' : ''}`} style={{ '--team': school.color, '--team-accent': school.accent }}>
       <div className="court-lines" aria-hidden="true"><span /><span /></div>
       {hasImageSource && <img ref={imageRef} src={imageSources[imageIndex]} alt="" style={{ objectPosition, opacity: positioned ? 1 : 0 }} onLoad={centerFace} onError={() => setImageIndex((current) => current + 1)} />}
       {!hasImageSource && <span className="portrait-initials">{initials}</span>}
@@ -324,10 +324,27 @@ function ImagePreview({ image, onClose, t }) {
   )
 }
 
-function ResultRow({ group, rank, podium, language, t }) {
+// The top 3 get big photo cards, like the saved ranking image.
+function PodiumCard({ group, rank, language, t }) {
   const lead = playerMap[group[0]]
   return (
-    <div className={`result-row ${podium ? 'result-row--podium' : ''}`}>
+    <div className={`podium-card ${rank === 1 ? 'podium-card--first' : ''}`}>
+      <div className="podium-photo">
+        <Portrait key={lead.id} player={lead} fill language={language} />
+        <span className="podium-rank">{String(rank).padStart(2, '0')}</span>
+      </div>
+      <div className="podium-info">
+        <strong>{playerName(lead, language)}</strong>
+        <span>{teamLabel(lead, language, t)}</span>
+      </div>
+    </div>
+  )
+}
+
+function ResultRow({ group, rank, language, t }) {
+  const lead = playerMap[group[0]]
+  return (
+    <div className="result-row">
       <span className="result-rank">{String(rank).padStart(2, '0')}</span>
       <Portrait key={lead.id} player={lead} compact language={language} />
       <div className="result-name">
@@ -439,13 +456,22 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
           : t.results.emptyDescription}</p>
       </section>
 
+      {/* Podium, rest of the list and the actions are separate grid items so phones can show
+          podium → actions → list, while desktop keeps the actions in a column beside both. */}
       <section className="results-layout">
-        <div>
-          <div className="results-list">
-            {hasRankedCharacters
-              ? ranked.map(({ group, rank: itemRank }, index) => <ResultRow key={group.join('-')} group={group} rank={itemRank} podium={index < 3} language={language} t={t} />)
-              : <p className="empty-results">{t.results.emptyList}</p>}
+        {hasRankedCharacters && (
+          <div className="podium">
+            {ranked.slice(0, 3).map(({ group, rank: itemRank }) => <PodiumCard key={group.join('-')} group={group} rank={itemRank} language={language} t={t} />)}
           </div>
+        )}
+        <div className="results-main">
+          {hasRankedCharacters
+            ? ranked.length > 3 && (
+              <div className="results-list">
+                {ranked.slice(3).map(({ group, rank: itemRank }) => <ResultRow key={group.join('-')} group={group} rank={itemRank} language={language} t={t} />)}
+              </div>
+            )
+            : <div className="results-list"><p className="empty-results">{t.results.emptyList}</p></div>}
           {rejectedPlayers.length > 0 ? (
             <section className="rejected-results">
               <span>{t.results.notRanked}</span>

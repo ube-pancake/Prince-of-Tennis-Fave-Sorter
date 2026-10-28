@@ -10,6 +10,7 @@ export const updates = [
       'The saved ranking image now shows your top 20.',
       'A fresh look for the start page: "Who\'s your fave?"',
       'Your results now open with "Game, Set, Won by…".',
+      'Your top 3 now get big photo cards on the results page.',
     ],
     ja: [
       '新チーム：城成湘南、スペイン、ドイツを追加しました。',
@@ -19,6 +20,7 @@ export const updates = [
       '保存できるランキング画像に上位20人まで表示されるようになりました。',
       'スタート画面を一新しました：「あなたの推しは？」',
       '結果画面は「ゲーム、セット、ウォンバイ…」で始まるようになりました。',
+      '結果画面で上位3人が大きな画像で表示されるようになりました。',
     ],
   },
 ]
