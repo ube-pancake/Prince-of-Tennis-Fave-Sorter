@@ -296,3 +296,7 @@ export const players = allPlayers.filter((player) => player.image)
 export const schools = allSchools.filter((school) => players.some((player) => player.schoolId === school.id))
 
 export const schoolMap = Object.fromEntries(schools.map((school) => [school.id, school]))
+
+// Everyone, including characters still hidden for lack of a photo (used by the local import tool).
+export const rosterSchools = allSchools
+export const rosterPlayers = allPlayers

@@ -76,12 +76,24 @@ Use this when a face gets cut off, or when a photo needs trimming, like the text
 4. **Set the face:** click the middle of the face. Every card and the saved ranking image will center on that spot. It saves right away.
 5. **Crop the photo:** click **Crop this photo…**, pick **Square**, **4:5** or **Free**, and drag the box. Drag inside it to move it, or drag a corner to resize it. Then click **Save crop**.
    - The cropped photo replaces the old one as a `.jpg`.
-   - The original moves to `old/<team>/`, so nothing is lost.
+   - The original moves to `public/players/<team>/old/`, so nothing is lost. Old photos aren't uploaded to the website.
    - The face spot carries over to the cropped photo.
 6. Check the previews on the right, or the real site at `http://localhost:5173/`.
 7. Commit and push with GitHub Desktop as usual.
 
-To undo a crop before you commit, right-click the changed photo in GitHub Desktop and choose **Discard changes**. Then delete the copy the tool put in `old/`.
+To undo a crop before you commit, right-click the changed photo in GitHub Desktop and choose **Discard changes**. Then delete the copy the tool put in the team's `old` folder.
+
+### Copying photos from the Top 9 project (local import page)
+
+1. Run `npm run dev` and open `http://localhost:5173/?import`.
+2. Each colour photo from `Tennis top9/public/players` is shown next to the current photo here.
+   - Photos that are already identical are skipped.
+   - Black & white ones are hidden unless you tick **include black & white**.
+3. Press **Replace** to use the Top 9 photo. The current one moves to the team's `old` folder.
+4. Press **Keep current** to skip it.
+5. If a match is wrong, change **Copy to** first.
+6. The page remembers your choices in this browser, so you can stop and come back. **Start over** clears them.
+7. Commit and push with GitHub Desktop as usual.
 
 ## Adding or correcting a character
 

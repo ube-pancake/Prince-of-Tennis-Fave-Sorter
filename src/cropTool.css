@@ -31,3 +31,18 @@
 .ct-preview img { display: block; object-fit: cover; background: var(--surface-2); }
 .ct-preview figcaption { margin-top: 4px; color: var(--muted); font-size: 11px; }
 @media (max-width: 900px) { .ct-work { grid-template-columns: 1fr; } }
+
+/* Photo import page (src/ImportTool.jsx) */
+.im-compare { margin-top: 18px; }
+.im-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.im-head h1 { margin: 0; font-family: var(--display-font); font-size: 30px; text-transform: uppercase; }
+.im-head select { min-height: 34px; margin-left: 6px; }
+.im-pair { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin: 18px 0; }
+.im-pair figure { margin: 0; }
+.im-pair img, .im-empty { display: block; max-width: min(42vw, 480px); max-height: 52vh; background: var(--surface-2); }
+.im-empty { display: grid; width: 300px; height: 300px; place-items: center; color: var(--muted); text-align: center; }
+.im-pair figcaption { margin-top: 6px; color: var(--muted); font-size: 12px; }
+.im-arrow { font-size: 34px; font-weight: 900; }
+.im-unmatched { margin-top: 34px; color: var(--muted); }
+.im-unmatched ul { columns: 3 220px; }
+@media (max-width: 700px) { .im-pair img, .im-empty { max-width: 100%; } }

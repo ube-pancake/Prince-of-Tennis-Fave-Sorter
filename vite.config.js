@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { copyFileSync, createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -34,8 +35,19 @@ const portraitList = () => ({
   },
 })
 
+// Replaced photos are kept in public/players/<team>/old/. They are left out of the published
+// site (see dropOldPhotos) and ignored by portraitList, which only reads files at the team level.
+const dropOldPhotos = () => ({
+  name: 'drop-old-photos',
+  apply: 'build',
+  closeBundle() {
+    const distPlayers = join(process.cwd(), 'dist', 'players')
+    if (!existsSync(distPlayers)) return
+    for (const team of readdirSync(distPlayers)) rmSync(join(distPlayers, team, 'old'), { recursive: true, force: true })
+  },
+})
+
 const focusFile = join(process.cwd(), 'src', 'faceFocus.json')
-const oldDir = join(process.cwd(), 'old')
 const portraitPath = /^([a-z0-9-]+)\/([a-z0-9-]+)\.(webp|png|jpe?g)$/
 
 const readBody = (request) => new Promise((resolve, reject) => {
@@ -52,9 +64,9 @@ const saveFocus = (key, focus) => {
   writeFileSync(focusFile, `{\n${lines.join(',\n')}\n}\n`)
 }
 
-// Moves a portrait into old/<team>/, adding -2, -3… if an older copy is already there.
+// Moves a portrait into public/players/<team>/old/, adding -2, -3… if an older copy is already there.
 const archive = (team, file) => {
-  const dir = join(oldDir, team)
+  const dir = join(playersDir, team, 'old')
   mkdirSync(dir, { recursive: true })
   const extension = extname(file)
   const base = file.slice(0, -extension.length)
@@ -104,8 +116,66 @@ const cropTool = () => ({
   },
 })
 
+// Local-only endpoints for the photo import page (src/ImportTool.jsx): lists the Top 9 project's
+// portraits, serves them for preview, and copies a chosen one in, archiving the current photo.
+const top9Dir = join(process.cwd(), '..', 'Tennis top9', 'public', 'players')
+const top9Framing = join(process.cwd(), '..', 'Tennis top9', 'src', 'framing.json')
+const md5 = (file) => createHash('md5').update(readFileSync(file)).digest('hex')
+const listPortraits = (root) => (existsSync(root) ? readdirSync(root) : []).flatMap((team) => {
+  const dir = join(root, team)
+  if (!statSync(dir).isDirectory()) return []
+  return readdirSync(dir).filter((file) => /\.(webp|png|jpe?g)$/i.test(file)).map((file) => ({ team, file, hash: md5(join(dir, file)) }))
+})
+
+const importTool = () => ({
+  name: 'import-tool',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use('/__import', async (request, response) => {
+      const reply = (status, body) => {
+        response.statusCode = status
+        response.setHeader('Content-Type', 'application/json')
+        response.end(JSON.stringify(body))
+      }
+      try {
+        const url = decodeURIComponent(request.url.split('?')[0])
+        if (request.method === 'GET' && url === '/list') {
+          const framing = existsSync(top9Framing) ? JSON.parse(readFileSync(top9Framing, 'utf8')) : {}
+          return reply(200, { top9: listPortraits(top9Dir), fave: listPortraits(playersDir), framing })
+        }
+        const image = /^\/img\/([a-z0-9-]+)\/([^/\\]+\.(?:webp|png|jpe?g))$/i.exec(url)
+        if (request.method === 'GET' && image) {
+          const file = join(top9Dir, image[1], image[2])
+          if (!existsSync(file)) return reply(404, { error: 'Not found' })
+          response.setHeader('Content-Type', `image/${extname(file).slice(1).toLowerCase().replace('jpg', 'jpeg')}`)
+          return createReadStream(file).pipe(response)
+        }
+        if (request.method === 'POST' && url === '/apply') {
+          const { source, target, focus } = JSON.parse(await readBody(request))
+          const from = /^([a-z0-9-]+)\/([^/\\]+\.(webp|png|jpe?g))$/i.exec(source || '')
+          const to = /^([a-z0-9-]+)\/([a-z0-9-]+)$/.exec(target || '')
+          if (!from || !to || !existsSync(join(top9Dir, source))) return reply(400, { error: 'Bad source or target' })
+          const [, team, slug] = to
+          const teamDir = join(playersDir, team)
+          mkdirSync(teamDir, { recursive: true })
+          const archived = readdirSync(teamDir)
+            .filter((file) => file.replace(/\.[^.]+$/, '') === slug && /\.(webp|png|jpe?g)$/i.test(file))
+            .map((file) => archive(team, file))
+          const extension = extname(from[2]).toLowerCase().replace('.jpeg', '.jpg')
+          copyFileSync(join(top9Dir, source), join(teamDir, `${slug}${extension}`))
+          if (Array.isArray(focus) && focus.length === 2 && focus.every(Number.isFinite)) saveFocus(`${team}/${slug}`, focus)
+          return reply(200, { ok: true, file: `${team}/${slug}${extension}`, archived })
+        }
+        return reply(404, { error: 'Unknown request' })
+      } catch (error) {
+        return reply(500, { error: error.message })
+      }
+    })
+  },
+})
+
 export default defineConfig({
-  plugins: [react(), portraitList(), cropTool()],
+  plugins: [react(), portraitList(), cropTool(), importTool(), dropOldPhotos()],
   base: repositoryName ? `/${repositoryName}/` : '/',
   // Compile down for older phones (roughly iOS 13+ and Android Chrome 80+);
   // Vite's default only targets browsers from 2023 onward.
