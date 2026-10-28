@@ -3,6 +3,7 @@ import { coverPosition, imageSourcesFor } from './crop.js'
 import { players, schools, schoolMap } from './data.js'
 import { buildRankingImage } from './rankingImage.js'
 import { sendResult } from './results.js'
+import { updates } from './updates.js'
 import { translations } from './i18n.js'
 import { applyChoice, createSortState, currentPair, estimateComparisons, getResult } from './sorter.js'
 
@@ -31,17 +32,17 @@ function Icon({ name, size = 20 }) {
 const WAVEBOX_URL = 'https://wavebox.me/wave/6vf81qelg8m318zr/'
 const GITHUB_URL = 'https://github.com/ube-pancake'
 
-function AboutDialog({ onClose, t }) {
+function InfoDialog({ title, onClose, t, children }) {
   useEffect(() => {
     const onKeyDown = (event) => { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [onClose])
   return (
-    <div className="image-preview" role="dialog" aria-modal="true" aria-labelledby="about-title" onClick={onClose}>
+    <div className="image-preview" role="dialog" aria-modal="true" aria-labelledby="info-title" onClick={onClose}>
       <div className="image-preview-inner about-dialog" onClick={(event) => event.stopPropagation()}>
-        <h2 id="about-title">{t.header.about}</h2>
-        <p>{t.about.madeBy} <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">{GITHUB_URL.replace('https://', '')}</a></p>
+        <h2 id="info-title">{title}</h2>
+        {children}
         <div className="image-preview-actions">
           <button className="primary-button" onClick={onClose}>{t.results.close}</button>
         </div>
@@ -50,7 +51,22 @@ function AboutDialog({ onClose, t }) {
   )
 }
 
-function Header({ dark, language, onToggleDark, onToggleLanguage, onAbout, phase, t }) {
+const formatDate = (date, language) => new Date(`${date}T12:00:00`).toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
+
+function UpdatesList({ language }) {
+  return (
+    <div className="updates-list">
+      {updates.map((update) => (
+        <section key={update.date}>
+          <h3>{formatDate(update.date, language)}</h3>
+          <ul>{(update[language] || update.en).map((line) => <li key={line}>{line}</li>)}</ul>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+function Header({ dark, language, onToggleDark, onToggleLanguage, onOpen, phase, t }) {
   return (
     <header className="site-header">
       <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={t.header.home}>
@@ -58,7 +74,8 @@ function Header({ dark, language, onToggleDark, onToggleLanguage, onAbout, phase
       </button>
       <div className="header-meta">
         <nav className="header-nav" aria-label={t.header.navigation}>
-          <button onClick={onAbout}>{t.header.about}</button>
+          <button onClick={() => onOpen('about')}>{t.header.about}</button>
+          <button onClick={() => onOpen('updates')}>{t.header.updates}</button>
           <a href={WAVEBOX_URL} target="_blank" rel="noopener noreferrer">{t.header.contact}</a>
         </nav>
         <span className="phase-label">{t.phase[phase]}</span>
@@ -492,7 +509,7 @@ export default function App() {
   const [history, setHistory] = useState([])
   const [savedAt, setSavedAt] = useState(null)
   const [hasSave, setHasSave] = useState(() => Boolean(storage.get(STORAGE_KEY)))
-  const [aboutOpen, setAboutOpen] = useState(false)
+  const [dialog, setDialog] = useState(null) // 'about' | 'updates' | null
   const resultGroups = sharedResult || (sortState ? getResult(sortState) : null)
   const selectedCount = players.filter((player) => selected.includes(player.schoolId)).length
   const t = translations[language]
@@ -583,7 +600,7 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (aboutOpen) return
+      if (dialog) return
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
       // Leave browser shortcuts (Ctrl+S, Cmd+1…) alone and don't repeat picks while a key is held.
       if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return
@@ -604,12 +621,21 @@ export default function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [phase, start, choose, undo, save, load, hasSave, aboutOpen])
+  }, [phase, start, choose, undo, save, load, hasSave, dialog])
 
   return (
     <div className="app">
-      <Header dark={dark} language={language} onToggleDark={() => setDark((value) => !value)} onToggleLanguage={() => setLanguage((value) => value === 'en' ? 'ja' : 'en')} onAbout={() => setAboutOpen(true)} phase={phase} t={t} />
-      {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} t={t} />}
+      <Header dark={dark} language={language} onToggleDark={() => setDark((value) => !value)} onToggleLanguage={() => setLanguage((value) => value === 'en' ? 'ja' : 'en')} onOpen={setDialog} phase={phase} t={t} />
+      {dialog === 'about' && (
+        <InfoDialog title={t.header.about} onClose={() => setDialog(null)} t={t}>
+          <p>{t.about.madeBy} <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">{GITHUB_URL.replace('https://', '')}</a></p>
+        </InfoDialog>
+      )}
+      {dialog === 'updates' && (
+        <InfoDialog title={t.header.updates} onClose={() => setDialog(null)} t={t}>
+          <UpdatesList language={language} />
+        </InfoDialog>
+      )}
       {phase === 'setup' && <Setup selected={selected} setSelected={setSelected} onStart={start} onLoad={load} hasSave={hasSave} t={t} />}
       {phase === 'sorting' && sortState && <Sorting sortState={sortState} count={selectedCount} onChoice={choose} onUndo={undo} canUndo={history.length > 0} onSave={save} savedAt={savedAt} language={language} t={t} />}
       {phase === 'results' && resultGroups && <Results groups={resultGroups} rejectedIds={sortState?.rejected || []} onRestart={restart} language={language} t={t} />}

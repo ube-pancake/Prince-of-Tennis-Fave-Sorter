@@ -6,7 +6,7 @@ export const translations = {
       switchTheme: (dark) => `Switch to ${dark ? 'light' : 'dark'} mode`,
       switchLanguage: 'Switch to Japanese',
       languageButton: '日本語',
-      navigation: 'Site', about: 'About', contact: 'Contact',
+      navigation: 'Site', about: 'About', updates: 'Updates', contact: 'Contact',
     },
     about: {
       madeBy: 'Made by ube',
@@ -65,7 +65,7 @@ export const translations = {
       switchTheme: (dark) => `${dark ? 'ライト' : 'ダーク'}モードに切り替える`,
       switchLanguage: 'Switch to English',
       languageButton: 'EN',
-      navigation: 'サイト', about: 'About', contact: 'Contact',
+      navigation: 'サイト', about: 'About', updates: 'Updates', contact: 'Contact',
     },
     about: {
       madeBy: '制作：ube',
