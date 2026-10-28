@@ -18,11 +18,11 @@ const allSchools = [
   { id: 'australia', name: 'Australia', short: 'AUS', color: '#00843d', accent: '#ffcd00' },
   { id: 'england', name: 'England', short: 'ENG', color: '#1d2b5c', accent: '#e8eaf2' },
   { id: 'france', name: 'France', short: 'FRA', color: '#1f3f8f', accent: '#f2c4c9' },
+  { id: 'germany', name: 'Germany', short: 'GER', color: '#2a2a2a', accent: '#ffce00' },
   { id: 'greece', name: 'Greece', short: 'GRE', color: '#0d5eaf', accent: '#e9f1fb' },
   { id: 'spain', name: 'Spain', short: 'ESP', color: '#aa151b', accent: '#f1bf00' },
   { id: 'switzerland', name: 'Switzerland', short: 'SUI', color: '#c8281d', accent: '#fdeceb' },
   { id: 'usa', name: 'USA', short: 'USA', color: '#24305e', accent: '#f0b7bd' },
-  { id: 'foreign', name: 'Foreign Teams', short: 'INT', color: '#234255', accent: '#75d7d1' },
   { id: 'other', name: 'Other', short: 'OTH', color: '#715e52', accent: '#e7d6be' },
 ]
 
@@ -45,9 +45,9 @@ const roster = {
   france: ['Leopold Camus', 'Jonathan St. Georges'],
   greece: ['Zeus Iliopoulos', 'Apollon Stephanopoulos', 'Vulcan Laertius'],
   spain: ['Antonio da Medanore', 'Julio Roman', 'Romeo Fernandez', 'Rodrigo Roca Rodrigo', 'Mares de Colon', 'Silva Serra Bambieri', 'Seda'],
-  switzerland: ['Peter Lambiel', 'Randy Pugu'],
+  germany: ['Jürgen Volk', 'Q.P.'],
+  switzerland: ['Alexander Amadeus', 'Peter Lambiel', 'Randy Pugu'],
   usa: ['Oliver Philips', 'Clive Miller', 'Don Pacino'],
-  foreign: ['Jürgen Volk', 'Q.P.', 'Alexander Amadeus'],
   other: [
     'Nanjiro Echizen', 'Sasabe',
     'Satoshi Horio', 'Kachiro Kato', 'Katsuo Mizuno', 'Tomoka Osakada', 'An Tachibana', 'Miyuki Chitose', 'Masashi Arai',
@@ -264,7 +264,8 @@ const affiliations = {
 }
 
 
-const slugify = (value) => value.toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+// Accented letters become plain ones ("Jürgen" → "jurgen") so file names stay simple.
+const slugify = (value) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
 // "team/slug" -> portrait file, preferring WebP, then PNG, then JPG when several exist.
 const formatOrder = ['webp', 'png', 'jpg', 'jpeg']

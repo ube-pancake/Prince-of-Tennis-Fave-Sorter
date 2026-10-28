@@ -16,7 +16,7 @@ export const translations = {
       hyoutei: 'Hyoutei', rokkaku: 'Rokkaku', rikkai: 'Rikkai', higa: 'Higa',
       shiten: 'Shitenhoji', josei: 'Josei Shonan', u17: 'U-17',
       australia: 'Australia', england: 'England', france: 'France', greece: 'Greece', spain: 'Spain', switzerland: 'Switzerland', usa: 'USA',
-      foreign: 'Foreign Teams', other: 'Other',
+      germany: 'Germany', other: 'Other',
     },
     setup: {
       heroStart: 'Rank the', heroAccent: 'court.',
@@ -75,7 +75,7 @@ export const translations = {
       hyoutei: '氷帝', rokkaku: '六角', rikkai: '立海', higa: '比嘉',
       shiten: '四天宝寺', josei: '城成湘南', u17: 'U-17',
       australia: 'オーストラリア', england: 'イギリス', france: 'フランス', greece: 'ギリシャ', spain: 'スペイン', switzerland: 'スイス', usa: 'アメリカ',
-      foreign: '海外チーム', other: 'その他',
+      germany: 'ドイツ', other: 'その他',
     },
     setup: {
       heroStart: 'コートを', heroAccent: 'ランキング。',
