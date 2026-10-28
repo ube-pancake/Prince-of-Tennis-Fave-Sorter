@@ -414,7 +414,7 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
         <div>
           <span className="results-label">{t.results.finalOrder}</span>
           {hasRankedCharacters
-            ? <h1>{t.results.gameSet}<br/><em ref={winnerRef}>{top}.</em></h1>
+            ? <h1>{t.results.gameSet}<br/><em ref={winnerRef}>{top}{t.results.winnerEnd}</em></h1>
             : <h1>{t.results.noFavourites}<br/><em>{t.results.thisTime}</em></h1>}
         </div>
         <p>{hasRankedCharacters

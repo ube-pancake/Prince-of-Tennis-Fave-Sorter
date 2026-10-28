@@ -39,7 +39,7 @@ export const translations = {
       tiebreak: 'Tiebreaker.', tiebreakHint: 'You tied these earlier — now pick the one you like more.',
     },
     results: {
-      tiedWith: 'tied with', finalOrder: 'Your final order', gameSet: 'ゲーム、セット、won by',
+      tiedWith: 'tied with', finalOrder: 'Your final order', gameSet: 'Game, Set, Won by', winnerEnd: '.',
       noFavourites: 'No favourites', thisTime: 'this time.',
       description: 'You made it through every matchup. Here’s the ranking your choices built.',
       emptyDescription: 'Every matchup was marked neither, so there is no ranking to show.',
@@ -98,7 +98,7 @@ export const translations = {
       tiebreak: 'タイブレーク。', tiebreakHint: '以前同率にしたキャラです。より好きな方を選んでください。',
     },
     results: {
-      tiedWith: '同率', finalOrder: '最終ランキング', gameSet: 'ゲーム、セット、won by',
+      tiedWith: '同率', finalOrder: '最終ランキング', gameSet: 'ゲーム、セット、ウォンバイ', winnerEnd: '。',
       noFavourites: 'お気に入りは', thisTime: '今回はなし。',
       description: 'すべての対戦が完了しました。あなたの選択から作られたランキングです。',
       emptyDescription: 'すべて「どちらも選ばない」だったため、表示するランキングはありません。',
