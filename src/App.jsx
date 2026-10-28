@@ -252,7 +252,7 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
         <div className="progress-track"><span style={{ width: `${percent}%` }} /></div>
         <div className="sort-utilities">
           <button className="utility-button" onClick={onUndo} disabled={!canUndo}><Icon name="undo" size={18} /> {t.sorting.undo} <kbd>J</kbd></button>
-          <button className="utility-button" onClick={onSave}><Icon name="save" size={18} /> {savedAt ? t.sorting.saved : t.sorting.save} <kbd>S</kbd></button>
+          <button className="utility-button" onClick={onSave}><Icon name="save" size={18} /> {savedAt === 'failed' ? t.sorting.saveFailed : savedAt ? t.sorting.saved : t.sorting.save} <kbd>S</kbd></button>
         </div>
       </section>
 
@@ -286,6 +286,30 @@ function Sorting({ sortState, count, onChoice, onUndo, canUndo, onSave, savedAt,
       )}
     </main>
   )
+}
+
+// In-app browsers (Messenger, Facebook, Instagram…) often block navigator.clipboard, so fall back
+// to the older select-and-copy trick, which still works in most of them.
+async function copyText(value) {
+  try {
+    await navigator.clipboard.writeText(value)
+    return true
+  } catch { /* blocked or missing: try the fallback */ }
+  try {
+    const area = document.createElement('textarea')
+    area.value = value
+    // 16px stops iOS zooming in; off-screen so nothing flashes.
+    area.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0;font-size:16px;'
+    document.body.appendChild(area)
+    area.focus()
+    area.select()
+    area.setSelectionRange(0, value.length)
+    const copied = document.execCommand('copy')
+    area.remove()
+    return copied
+  } catch {
+    return false
+  }
 }
 
 function detectBrowser() {
@@ -395,11 +419,10 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
   }
 
   const copyValue = async (value, success) => {
-    try {
-      await navigator.clipboard.writeText(value)
+    if (await copyText(value)) {
       setNotice(success)
       window.setTimeout(() => setNotice(''), 1800)
-    } catch {
+    } else {
       setNotice(t.results.copyUnavailable)
     }
   }
@@ -515,7 +538,7 @@ function parseSharedResult() {
 // Storage can be missing or throw (private mode, some in-app browsers), so never let it crash the app.
 const storage = {
   get: (key) => { try { return window.localStorage.getItem(key) } catch { return null } },
-  set: (key, value) => { try { window.localStorage.setItem(key, value) } catch { /* not saved */ } },
+  set: (key, value) => { try { window.localStorage.setItem(key, value); return true } catch { return false } },
   remove: (key) => { try { window.localStorage.removeItem(key) } catch { /* nothing to remove */ } },
 }
 
@@ -567,9 +590,10 @@ export default function App() {
 
   const save = useCallback(() => {
     if (!sortState) return
-    storage.set(STORAGE_KEY, JSON.stringify({ phase: 'sorting', selected, sortState }))
-    setSavedAt(new Date())
-    setHasSave(true)
+    const saved = storage.set(STORAGE_KEY, JSON.stringify({ phase: 'sorting', selected, sortState }))
+    // Some in-app browsers block storage; say so instead of pretending it worked.
+    setSavedAt(saved ? new Date() : 'failed')
+    setHasSave(saved)
   }, [selected, sortState])
 
   const load = useCallback(() => {
@@ -615,7 +639,8 @@ export default function App() {
   }, [history])
 
   const restart = useCallback(() => {
-    window.history.replaceState(null, '', window.location.pathname)
+    // Drop a shared #result from the address; some embedded browsers refuse, which must not block the restart.
+    try { window.history.replaceState(null, '', window.location.pathname) } catch { /* keep the old address */ }
     setSharedResult(null)
     setPhase('setup')
     setSortState(null)

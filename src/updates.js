@@ -11,6 +11,7 @@ export const updates = [
       'A fresh look for the start page: "Who\'s your fave?"',
       'Your results now open with "Game, Set, Won by…".',
       'Your top 3 now get big photo cards on the results page.',
+      'The copy buttons now work inside more in-app browsers, like Messenger and Instagram.',
     ],
     ja: [
       '新チーム：城成湘南、スペイン、ドイツを追加しました。',
@@ -21,6 +22,7 @@ export const updates = [
       'スタート画面を一新しました：「あなたの推しは？」',
       '結果画面は「ゲーム、セット、ウォンバイ…」で始まるようになりました。',
       '結果画面で上位3人が大きな画像で表示されるようになりました。',
+      'MessengerやInstagramなどのアプリ内ブラウザでも、コピーボタンが使えるようになりました。',
     ],
   },
 ]

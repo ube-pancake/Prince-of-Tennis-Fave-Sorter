@@ -33,7 +33,7 @@ export const translations = {
       pick: (side) => `Pick ${side}`,
     },
     sorting: {
-      comparison: 'Comparison', sorted: 'sorted', undo: 'Undo', save: 'Save', saved: 'Saved',
+      comparison: 'Comparison', sorted: 'sorted', undo: 'Undo', save: 'Save', saved: 'Saved', saveFailed: "Can't save here",
       likeBoth: 'Like both?', tie: 'Call it a tie', likeNeither: 'Like neither?', neither: 'Choose neither',
       left: 'Left', right: 'Right', tieShort: 'Tie', neitherShort: 'Neither',
       tiebreak: 'Tiebreaker.', tiebreakHint: 'You tied these earlier — now pick the one you like more.',
@@ -92,7 +92,7 @@ export const translations = {
       pick: (side) => side === 'left' ? '左を選ぶ' : '右を選ぶ',
     },
     sorting: {
-      comparison: '比較', sorted: '完了', undo: '元に戻す', save: '保存', saved: '保存済み',
+      comparison: '比較', sorted: '完了', undo: '元に戻す', save: '保存', saved: '保存済み', saveFailed: 'このブラウザでは保存できません',
       likeBoth: '両方好き？', tie: '同率にする', likeNeither: 'どちらも違う？', neither: 'どちらも選ばない',
       left: '左', right: '右', tieShort: '同率', neitherShort: 'どちらも選ばない',
       tiebreak: 'タイブレーク。', tiebreakHint: '以前同率にしたキャラです。より好きな方を選んでください。',
