@@ -28,10 +28,6 @@ function Icon({ name, size = 20 }) {
   return <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
 
-function BrandMark() {
-  return <div className="brand-mark" aria-hidden="true"><span /><span /></div>
-}
-
 const WAVEBOX_URL = 'https://wavebox.me/wave/6vf81qelg8m318zr/'
 const GITHUB_URL = 'https://github.com/ube-pancake'
 
@@ -58,7 +54,6 @@ function Header({ dark, language, onToggleDark, onToggleLanguage, onAbout, phase
   return (
     <header className="site-header">
       <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={t.header.home}>
-        <BrandMark />
         <span>COURT ORDER</span>
       </button>
       <div className="header-meta">

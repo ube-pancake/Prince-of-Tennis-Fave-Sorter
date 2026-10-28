@@ -3,6 +3,8 @@ import { coverCrop, imageSourcesFor } from './crop.js'
 import { schoolMap } from './data.js'
 
 const WIDTH = 1080
+// How many characters the saved image lists: the top 3 as big cards, the rest in two columns.
+const IMAGE_LIMIT = 20
 const MARGIN = 60
 const INK = '#121914'
 const MUTED = '#5d655f'
@@ -85,8 +87,9 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
   const font = language === 'ja' ? '"Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif' : 'Arial, sans-serif'
   const displayFont = language === 'ja' ? font : '"Arial Black", Arial, sans-serif'
   const podium = entries.slice(0, 3)
-  const rest = entries.slice(3, 15)
-  const images = await Promise.all(entries.slice(0, 15).map(({ player }) => loadPortrait(player)))
+  const shown = entries.slice(0, IMAGE_LIMIT)
+  const rest = shown.slice(3)
+  const images = await Promise.all(shown.map(({ player }) => loadPortrait(player)))
 
   const tileGap = 24
   const tileW = (WIDTH - MARGIN * 2 - tileGap * 2) / 3
