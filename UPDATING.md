@@ -53,7 +53,7 @@ Use `.webp`, `.png` or `.jpg` files and keep the names lowercase with hyphens. I
 
 Square portraits work best: about 1200 × 1200 px (at least 800 × 800), head and shoulders, with the face in the upper half.
 
-Each photo also has a face position in `faceFocus` in `src/data.js`, used to keep the face centered when the picture is cropped. A new photo without an entry is centered on the middle, upper third. If a face ends up cut off, add or adjust its entry: `[percent from left, percent from top]`.
+Each photo also has a face position in `src/faceFocus.json`, used to keep the face centered when the picture is cropped. A new photo without an entry is centered on the middle, upper third. The easiest way to set or fix it is the crop tool below. You can also edit the entry by hand: `[percent from left, percent from top]`.
 
 If `npm run dev` is running, restart it after adding photos.
 
@@ -65,6 +65,23 @@ Windows Paint can save an opened image as WebP on current Windows versions:
 2. Choose **File → Save as**.
 3. Select **WebP picture**.
 4. Save it with the exact expected filename in the correct `public/players` team folder.
+
+### Fixing a photo's crop (local crop tool)
+
+Use this when a face gets cut off, or when a photo needs trimming, like the text side of a "HAPPY BIRTHDAY" card. It only works on your computer, and the website never shows it.
+
+1. In the project folder, run `npm run dev`.
+2. Open `http://localhost:5173/?crop` in your browser.
+3. Choose the character from the dropdown, or use **← Prev / Next →** (the arrow keys work too).
+4. **Set the face:** click the middle of the face. Every card and the saved ranking image will center on that spot. It saves right away.
+5. **Crop the photo:** click **Crop this photo…**, pick **Square**, **4:5** or **Free**, and drag the box. Drag inside it to move it, or drag a corner to resize it. Then click **Save crop**.
+   - The cropped photo replaces the old one as a `.jpg`.
+   - The original moves to `old/<team>/`, so nothing is lost.
+   - The face spot carries over to the cropped photo.
+6. Check the previews on the right, or the real site at `http://localhost:5173/`.
+7. Commit and push with GitHub Desktop as usual.
+
+To undo a crop before you commit, right-click the changed photo in GitHub Desktop and choose **Discard changes**. Then delete the copy the tool put in `old/`.
 
 ## Adding or correcting a character
 

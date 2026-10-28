@@ -1,0 +1,33 @@
+/* Styles for the local-only crop tool (src/CropTool.jsx). */
+.ct { min-height: 100vh; padding: 0 24px 40px; color: var(--ink); background: var(--bg); font-size: 14px; }
+.ct-bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--line); background: var(--bg); }
+.ct-bar strong { font-family: var(--display-font); font-size: 18px; text-transform: uppercase; }
+.ct-local { margin-right: auto; padding: 3px 8px; color: var(--accent-ink); background: var(--accent); font-size: 11px; font-weight: 800; }
+.ct-bar select, .ct button { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); color: var(--ink); background: var(--surface); font: inherit; cursor: pointer; }
+.ct button:disabled { cursor: default; opacity: .45; }
+.ct-bar a { color: var(--ink); font-weight: 800; }
+.ct .ct-primary { border-color: var(--ink); color: var(--accent-ink); background: var(--accent); font-weight: 800; }
+.ct-work { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; padding-top: 20px; }
+.ct-stage { display: flex; align-items: flex-start; justify-content: center; }
+.ct-frame { position: relative; display: inline-block; overflow: hidden; line-height: 0; cursor: crosshair; touch-action: none; user-select: none; }
+.ct-frame.is-cropping { cursor: default; }
+.ct-frame img { display: block; width: 100%; height: auto; }
+.ct-face { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 3px solid var(--accent); border-radius: 50%; box-shadow: 0 0 0 2px #000, inset 0 0 0 2px #000; pointer-events: none; }
+.ct-box { position: absolute; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .55); outline: 2px solid var(--accent); cursor: move; }
+.ct-handle { position: absolute; width: 16px; height: 16px; border: 2px solid #000; background: var(--accent); }
+.ct-nw { top: -8px; left: -8px; cursor: nwse-resize; }
+.ct-ne { top: -8px; right: -8px; cursor: nesw-resize; }
+.ct-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
+.ct-se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+.ct-side h1 { margin: 0; font-family: var(--display-font); font-size: 26px; text-transform: uppercase; }
+.ct-side h2 { margin: 26px 0 10px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.ct-meta { margin: 4px 0 14px; color: var(--muted); font-size: 12px; }
+.ct-help { color: var(--muted); line-height: 1.5; }
+.ct-ratios { display: flex; gap: 14px; margin: 10px 0; }
+.ct-actions { display: flex; gap: 8px; }
+.ct-status { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface); }
+.ct-previews { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.ct-preview { margin: 0; }
+.ct-preview img { display: block; object-fit: cover; background: var(--surface-2); }
+.ct-preview figcaption { margin-top: 4px; color: var(--muted); font-size: 11px; }
+@media (max-width: 900px) { .ct-work { grid-template-columns: 1fr; } }
