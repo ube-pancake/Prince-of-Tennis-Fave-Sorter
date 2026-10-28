@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { coverPosition } from './crop.js'
-import { players, schools } from './data.js'
+import { players as allPlayers, schools } from './data.js'
 import './cropTool.css'
 
 // Local-only photo fixer (npm run dev, then open /?crop). Click a face to set where crops
@@ -16,6 +16,12 @@ const PREVIEWS = [
   { label: 'Result list', width: 82, height: 82 },
   { label: 'Saved image top 3', width: 152, height: 190 },
 ]
+
+// ?only=id1,id2,… limits the tool to those characters (e.g. just the newly imported photos).
+const only = (new URLSearchParams(window.location.search).get('only') || '').split(',').filter(Boolean)
+const selected = allPlayers.filter((player) => only.includes(player.id))
+const players = selected.length ? selected : allPlayers
+const queryFor = (id) => `?crop=${id}${only.length ? `&only=${only.join(',')}` : ''}`
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 const fileOf = (player) => player.image.split('/players/')[1]
@@ -76,7 +82,7 @@ export default function CropTool() {
     setNatural(null)
     setBox(null)
     setStatus('')
-    window.history.replaceState(null, '', `?crop=${nextId}`)
+    window.history.replaceState(null, '', queryFor(nextId))
   }
   const step = (offset) => select(players[(index + offset + players.length) % players.length].id)
 
@@ -182,9 +188,9 @@ export default function CropTool() {
     <main className="ct">
       <header className="ct-bar">
         <strong>Crop fixer</strong>
-        <span className="ct-local">local only · not on the website</span>
+        <span className="ct-local">local only · not on the website{only.length ? ` · ${index + 1} of ${players.length} selected` : ''}</span>
         <select value={id} onChange={(event) => select(event.target.value)}>
-          {schools.map((school) => (
+          {schools.filter((school) => players.some((item) => item.schoolId === school.id)).map((school) => (
             <optgroup key={school.id} label={school.name}>
               {players.filter((item) => item.schoolId === school.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </optgroup>
