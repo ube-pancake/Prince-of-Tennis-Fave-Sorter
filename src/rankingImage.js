@@ -6,9 +6,10 @@ const WIDTH = 1080
 // How many characters the saved image lists: the top 3 as big cards, the rest in two columns.
 const IMAGE_LIMIT = 20
 const MARGIN = 60
-const INK = '#121914'
-const MUTED = '#5d655f'
-const ACCENT = '#cfff45'
+const INK = '#3f3743'
+const MUTED = '#566b86'
+const ACCENT = '#f7cdf3'
+const POP = '#68809e'
 
 const loadImage = (src) => new Promise((resolve, reject) => {
   const image = new Image()
@@ -85,7 +86,9 @@ const wrapText = (ctx, text, maxWidth, maxLines) => {
 
 export async function buildRankingImage({ entries, title, heading, footer, schoolName, language, siteUrl, scanCaption }) {
   const font = language === 'ja' ? '"Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif' : 'Arial, sans-serif'
-  const displayFont = language === 'ja' ? font : '"Arial Black", Arial, sans-serif'
+  const displayFont = language === 'ja' ? `"Court Order JA", ${font}` : '"Arial Black", Arial, sans-serif'
+  // Canvas text doesn't wait for web fonts, so load the Japanese heading font first (falls back quietly if it can't).
+  if (language === 'ja') await document.fonts?.load('30px "Court Order JA"', '跡部').catch(() => {})
   const podium = entries.slice(0, 3)
   const shown = entries.slice(0, IMAGE_LIMIT)
   const rest = shown.slice(3)
@@ -108,7 +111,7 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
   canvas.width = WIDTH
   canvas.height = height
   const ctx = canvas.getContext('2d')
-  ctx.fillStyle = '#f2f3ed'
+  ctx.fillStyle = '#eaf2f6'
   ctx.fillRect(0, 0, WIDTH, height)
   ctx.fillStyle = ACCENT
   ctx.fillRect(MARGIN, 60, WIDTH - MARGIN * 2, 14)
@@ -154,9 +157,10 @@ export async function buildRankingImage({ entries, title, heading, footer, schoo
     ctx.fillRect(x, y, colW, rowH - 14)
     drawPortrait(ctx, player, images[index + 3], x, y, rowH - 14, rowH - 14, 34)
     const textX = x + rowH - 14 + 18
-    ctx.fillStyle = INK
+    ctx.fillStyle = POP
     ctx.font = `900 22px "Arial Black", Arial, sans-serif`
     ctx.fillText(String(rank).padStart(2, '0'), textX, y + 36)
+    ctx.fillStyle = INK
     const label = language === 'ja' ? player.label : player.label.toUpperCase()
     const nameWidth = colW - (textX - x) - 62
     // Shrink long names a little before resorting to an ellipsis.

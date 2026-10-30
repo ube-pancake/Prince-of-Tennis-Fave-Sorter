@@ -1,6 +1,33 @@
 // What's new, shown in the Updates panel (newest first). Add a new block at the top for each update.
 export const updates = [
   {
+    date: '2026-10-31',
+    en: [
+      'A whole new look: fresh sky-blue and pink colours, in light and dark mode.',
+      'Matchups now play out on a VS screen.',
+      'On phones, both characters and the Tie / Neither buttons now fit on one screen.',
+      'Your results now reveal step by step, with your #1 shown big behind the heading. Tap to skip.',
+      'The results page now tells you how many characters made your list ("your top 12").',
+      'Simpler result buttons: Save image, Copy result link and Start a new sort.',
+      'On phones, the Start button now sits right under the player count.',
+      'New "How it works" guide for picking teams. It opens on your first visit.',
+      'Japanese mode has a new bold heading font.',
+      'Fixed stretched photos in the results list on phones.',
+    ],
+    ja: [
+      'デザインを一新しました。空色とピンクの新しい配色で、ライト・ダークモードどちらにも対応しています。',
+      '対戦画面がVS画面になりました。',
+      'スマホでは、2人のキャラと「同率」「どちらも選ばない」ボタンが1画面に収まるようになりました。',
+      '結果は順番に表示され、1位のキャラが見出しの後ろに大きく表示されます。タップでスキップできます。',
+      '結果画面に、ランキング入りしたキャラの人数（「あなたのトップ12」）が表示されるようになりました。',
+      '結果画面のボタンを「画像を保存」「結果リンクをコピー」「新しく始める」に整理しました。',
+      'スマホでは、スタートボタンが選手数のすぐ下に表示されるようになりました。',
+      'チームの選び方を説明する「使い方」ガイドを追加しました。初回アクセス時に表示されます。',
+      '日本語表示の見出しに新しい太字フォントを使うようになりました。',
+      'スマホの結果リストで画像が縦に伸びてしまう不具合を修正しました。',
+    ],
+  },
+  {
     date: '2026-10-28',
     en: [
       'New teams: Josei Shonan, Spain and Germany.',

@@ -8,6 +8,7 @@ import { translations } from './i18n.js'
 import { applyChoice, createSortState, currentPair, estimateComparisons, getResult } from './sorter.js'
 
 const STORAGE_KEY = 'court-order-progress-v1'
+const GUIDE_KEY = 'court-order-guide-seen'
 const playerMap = Object.fromEntries(players.map((player) => [player.id, player]))
 const playerName = (player, language) => language === 'ja' && player.nameJa ? player.nameJa : player.name
 // The school / role line under a name: a character's own affiliation if known, otherwise the team.
@@ -32,7 +33,7 @@ function Icon({ name, size = 20 }) {
 const WAVEBOX_URL = 'https://wavebox.me/wave/6vf81qelg8m318zr/'
 const GITHUB_URL = 'https://github.com/ube-pancake'
 
-function InfoDialog({ title, onClose, t, children }) {
+function InfoDialog({ title, onClose, closeLabel, t, children }) {
   useEffect(() => {
     const onKeyDown = (event) => { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKeyDown)
@@ -44,9 +45,23 @@ function InfoDialog({ title, onClose, t, children }) {
         <h2 id="info-title">{title}</h2>
         {children}
         <div className="image-preview-actions">
-          <button className="primary-button" onClick={onClose}>{t.results.close}</button>
+          <button className="primary-button" onClick={onClose}>{closeLabel || t.results.close}</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// First-visit guide to picking teams; the example rows reuse the real toggle styles so they look the same.
+function TeamGuide({ t }) {
+  const [inSchool, outSchool] = [schools[0], schools[1]]
+  return (
+    <div className="team-guide">
+      <div className="team-guide-example" aria-hidden="true">
+        <SchoolToggle school={inSchool} active onToggle={() => {}} t={t} />
+        <SchoolToggle school={outSchool} active={false} onToggle={() => {}} t={t} />
+      </div>
+      <ul>{t.setup.guideSteps.map((step) => <li key={step}>{step}</li>)}</ul>
     </div>
   )
 }
@@ -161,7 +176,7 @@ function SchoolToggle({ school, active, onToggle, t }) {
   )
 }
 
-function Setup({ selected, setSelected, onStart, onLoad, hasSave, t }) {
+function Setup({ selected, setSelected, onStart, onLoad, onGuide, hasSave, t }) {
   const selectedPlayers = players.filter((player) => selected.includes(player.schoolId))
   const allSelected = selected.length === schools.length
   const toggle = (id) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
@@ -179,6 +194,13 @@ function Setup({ selected, setSelected, onStart, onLoad, hasSave, t }) {
           <span className="score-rule" />
           <span>{t.setup.playersOnCourt.split('\n').map((line, index) => <span key={line}>{index > 0 ? <br/> : null}{line}</span>)}</span>
         </div>
+        {/* Phones get the start buttons right under the count too, so nobody has to scroll past every team. */}
+        <div className="hero-start">
+          {hasSave && <button className="secondary-button" onClick={onLoad}>{t.setup.continue}</button>}
+          <button className="primary-button" onClick={onStart} disabled={selectedPlayers.length < 2}>
+            {t.setup.start} <Icon name="arrow" />
+          </button>
+        </div>
       </section>
 
       <section className="roster-section">
@@ -187,7 +209,10 @@ function Setup({ selected, setSelected, onStart, onLoad, hasSave, t }) {
             <h2>{t.setup.buildDraw}</h2>
             <p>{t.setup.selectHint}</p>
           </div>
-          <button className="text-button" onClick={setAll}>{allSelected ? t.setup.clearAll : t.setup.selectAll}</button>
+          <div className="section-heading-actions">
+            <button className="text-button" onClick={onGuide}>{t.setup.guideOpen}</button>
+            <button className="text-button" onClick={setAll}>{allSelected ? t.setup.clearAll : t.setup.selectAll}</button>
+          </div>
         </div>
         <div className="school-grid">
           {schools.map((school) => <SchoolToggle key={school.id} school={school} active={selected.includes(school.id)} onToggle={toggle} t={t} />)}
@@ -391,7 +416,10 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
   // The big heading uses just the family name in English ("ATOBE."); Japanese names are short enough to show in full.
   const top = ranked[0]?.group.map((id) => language === 'ja' ? playerName(playerMap[id], language) : playerMap[id].name.split(/\s+/).pop()).join(' & ')
   const hasRankedCharacters = ranked.length > 0
+  const winner = hasRankedCharacters ? playerMap[ranked[0].group[0]] : null
   const rejectedPlayers = rejectedIds.map((id) => playerMap[id]).filter(Boolean)
+  // The page reveals itself step by step (heading → #1 → podium → list → actions); any tap skips to the end.
+  const [revealed, setRevealed] = useState(false)
 
   // The winner's name wraps between words; if a single word is still too wide for the
   // heading, shrink the text step by step until it fits instead of cutting it off.
@@ -427,7 +455,6 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
     }
   }
 
-  const copyList = () => copyValue(ranked.map(({ group, rank: itemRank }) => `${itemRank}. ${group.map((id) => playerName(playerMap[id], language)).join(' = ')}`).join('\n'), t.results.rankingCopied)
   const copyLink = () => copyValue(shareUrl(), t.results.linkCopied)
 
   // Build the image as soon as the results show, so the share sheet can open
@@ -466,16 +493,18 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
   }
 
   return (
-    <main className="results-page page-shell">
+    <main className={`results-page page-shell ${revealed ? 'is-revealed' : ''}`} onClick={() => setRevealed(true)}>
       <section className="results-hero">
+        {winner && <div className="results-backdrop" aria-hidden="true"><Portrait key={winner.id} player={winner} fill language={language} /></div>}
         <div>
           <span className="results-label">{t.results.finalOrder}</span>
           {hasRankedCharacters
-            ? <h1>{t.results.gameSet}<br/><em ref={winnerRef}>{top}{t.results.winnerEnd}</em></h1>
+            // A "\n" in the heading starts a new line, and each line stays whole (ウォンバイ never splits).
+            ? <h1><span className="results-kicker">{t.results.gameSet.split('\n').map((line, index) => <span key={line}>{index > 0 && <br/>}<span className="results-kicker-line">{line}</span></span>)}</span><br/><em ref={winnerRef}>{top}{t.results.winnerEnd}</em></h1>
             : <h1>{t.results.noFavourites}<br/><em>{t.results.thisTime}</em></h1>}
         </div>
         <p>{hasRankedCharacters
-          ? t.results.description
+          ? t.results.description(groups.flat().length)
           : t.results.emptyDescription}</p>
       </section>
 
@@ -508,11 +537,8 @@ function Results({ groups, rejectedIds = [], onRestart, language, t }) {
         </div>
         <aside className="result-actions">
           <div className="result-actions-inner">
-            <h2>{t.results.takeIt}</h2>
-            <p>{t.results.takeDescription}</p>
-            <button onClick={copyLink}><Icon name="link" /> {t.results.copyLink}</button>
             <button onClick={downloadImage}><Icon name="image" /> {t.results.download}</button>
-            <button onClick={copyList}><Icon name="copy" /> {t.results.copyList}</button>
+            <button onClick={copyLink}><Icon name="link" /> {t.results.copyLink}</button>
             <button className="restart-button" onClick={onRestart}><Icon name="restart" /> {t.results.restart}</button>
             {notice && <span className="notice" role="status">{notice}</span>}
           </div>
@@ -558,7 +584,9 @@ export default function App() {
   const [history, setHistory] = useState([])
   const [savedAt, setSavedAt] = useState(null)
   const [hasSave, setHasSave] = useState(() => Boolean(storage.get(STORAGE_KEY)))
-  const [dialog, setDialog] = useState(null) // 'about' | 'updates' | null
+  // 'about' | 'updates' | 'guide' | null. The team guide opens by itself on a first visit to the start page.
+  const [dialog, setDialog] = useState(() => !sharedResult && !storage.get(GUIDE_KEY) ? 'guide' : null)
+  const closeGuide = useCallback(() => { storage.set(GUIDE_KEY, '1'); setDialog(null) }, [])
   const resultGroups = sharedResult || (sortState ? getResult(sortState) : null)
   const selectedCount = players.filter((player) => selected.includes(player.schoolId)).length
   const t = translations[language]
@@ -687,7 +715,12 @@ export default function App() {
           <UpdatesList language={language} />
         </InfoDialog>
       )}
-      {phase === 'setup' && <Setup selected={selected} setSelected={setSelected} onStart={start} onLoad={load} hasSave={hasSave} t={t} />}
+      {dialog === 'guide' && phase === 'setup' && (
+        <InfoDialog title={t.setup.guideTitle} onClose={closeGuide} closeLabel={t.setup.guideDone} t={t}>
+          <TeamGuide t={t} />
+        </InfoDialog>
+      )}
+      {phase === 'setup' && <Setup selected={selected} setSelected={setSelected} onStart={start} onLoad={load} onGuide={() => setDialog('guide')} hasSave={hasSave} t={t} />}
       {phase === 'sorting' && sortState && <Sorting sortState={sortState} count={selectedCount} onChoice={choose} onUndo={undo} canUndo={history.length > 0} onSave={save} savedAt={savedAt} language={language} t={t} />}
       {phase === 'results' && resultGroups && <Results groups={resultGroups} rejectedIds={sortState?.rejected || []} onRestart={restart} language={language} t={t} />}
       <footer>
