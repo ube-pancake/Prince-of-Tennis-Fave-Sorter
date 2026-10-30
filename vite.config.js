@@ -43,7 +43,10 @@ const dropOldPhotos = () => ({
   closeBundle() {
     const distPlayers = join(process.cwd(), 'dist', 'players')
     if (!existsSync(distPlayers)) return
-    for (const team of readdirSync(distPlayers)) rmSync(join(distPlayers, team, 'old'), { recursive: true, force: true })
+    // Only team folders: on Linux (GitHub's build machine) removing "README.md/old" throws ENOTDIR instead of being skipped.
+    for (const entry of readdirSync(distPlayers, { withFileTypes: true })) {
+      if (entry.isDirectory()) rmSync(join(distPlayers, entry.name, 'old'), { recursive: true, force: true })
+    }
   },
 })
 
