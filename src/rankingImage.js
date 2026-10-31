@@ -34,7 +34,7 @@ const drawPortrait = (ctx, player, image, x, y, w, h, initialsSize) => {
   ctx.fillStyle = school.color
   ctx.fillRect(x, y, w, h)
   if (image) {
-    const { sx, sy, sw, sh } = coverCrop(image.naturalWidth, image.naturalHeight, w, h, player.focus[0], player.focus[1])
+    const { sx, sy, sw, sh } = coverCrop(image.naturalWidth, image.naturalHeight, w, h, player.focus[0], player.focus[1], player.focus[2])
     ctx.drawImage(image, sx, sy, sw, sh, x, y, w, h)
   } else {
     ctx.fillStyle = school.accent

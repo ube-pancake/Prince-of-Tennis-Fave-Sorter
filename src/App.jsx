@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { coverPosition, imageSourcesFor } from './crop.js'
+import { coverFrame, imageSourcesFor } from './crop.js'
 import { players, schools, schoolMap } from './data.js'
 import { buildRankingImage } from './rankingImage.js'
 import { sendResult } from './results.js'
@@ -121,8 +121,7 @@ function preloadPortrait(player) {
 // until its face-centred crop is known, which avoids it sliding into place after it appears.
 function Portrait({ player, compact = false, fill = false, language = 'en' }) {
   const [imageIndex, setImageIndex] = useState(0)
-  const [objectPosition, setObjectPosition] = useState(`${player.focus[0]}% ${player.focus[1]}%`)
-  const [positioned, setPositioned] = useState(false)
+  const [frame, setFrame] = useState(null)
   const imageRef = useRef(null)
   const school = schoolMap[player.schoolId]
   const displayName = playerName(player, language)
@@ -132,11 +131,14 @@ function Portrait({ player, compact = false, fill = false, language = 'en' }) {
   const imageSources = imageSourcesFor(player)
   const hasImageSource = imageIndex < imageSources.length
 
+  // Measures the portrait box (not the image, which is sized by the result) and frames the face in it,
+  // zoomed in by focus[2] when the crop tool set one.
   const centerFace = useCallback(() => {
     const image = imageRef.current
-    if (!image?.naturalWidth) return
-    if (image.clientWidth) setObjectPosition(coverPosition(image.naturalWidth, image.naturalHeight, image.clientWidth, image.clientHeight, player.focus[0], player.focus[1]))
-    setPositioned(true)
+    const box = image?.parentElement
+    if (!image?.naturalWidth || !box?.clientWidth) return
+    const [fx, fy, zoom] = player.focus
+    setFrame(coverFrame(image.naturalWidth, image.naturalHeight, box.clientWidth, box.clientHeight, fx, fy, zoom))
   }, [player])
 
   // A cached image is already complete before paint, so position it before it is ever shown.
@@ -145,11 +147,11 @@ function Portrait({ player, compact = false, fill = false, language = 'en' }) {
   }, [centerFace, imageIndex])
 
   useEffect(() => {
-    const image = imageRef.current
-    if (!image) return undefined
+    const box = imageRef.current?.parentElement
+    if (!box) return undefined
     if (typeof ResizeObserver === 'function') {
       const observer = new ResizeObserver(centerFace)
-      observer.observe(image)
+      observer.observe(box)
       return () => observer.disconnect()
     }
     window.addEventListener('resize', centerFace)
@@ -159,7 +161,7 @@ function Portrait({ player, compact = false, fill = false, language = 'en' }) {
   return (
     <div className={`portrait ${compact ? 'portrait--compact' : ''} ${fill ? 'portrait--fill' : ''}`} style={{ '--team': school.color, '--team-accent': school.accent }}>
       <div className="court-lines" aria-hidden="true"><span /><span /></div>
-      {hasImageSource && <img ref={imageRef} src={imageSources[imageIndex]} alt="" style={{ objectPosition, opacity: positioned ? 1 : 0 }} onLoad={centerFace} onError={() => setImageIndex((current) => current + 1)} />}
+      {hasImageSource && <img ref={imageRef} src={imageSources[imageIndex]} alt="" style={frame ? { ...frame, opacity: 1 } : { opacity: 0 }} onLoad={centerFace} onError={() => setImageIndex((current) => current + 1)} />}
       {!hasImageSource && <span className="portrait-initials">{initials}</span>}
       <span className="portrait-code">{school.short}</span>
     </div>

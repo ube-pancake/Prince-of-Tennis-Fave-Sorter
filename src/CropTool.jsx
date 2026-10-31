@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { coverPosition } from './crop.js'
+import { coverFrame } from './crop.js'
 import { players as allPlayers, schools } from './data.js'
 import './cropTool.css'
 
@@ -11,8 +11,12 @@ const RATIOS = { square: 1, portrait: 4 / 5, free: null }
 const MAX_SIDE = 1200
 const MIN_SIDE = 40
 const PREVIEWS = [
-  { label: 'Desktop card', width: 240, height: 220 },
-  { label: 'Phone card', width: 120, height: 174 },
+  // Same shapes as the live site (2026-10-31 layout): VS cards 532×440 desktop / 155×210 phone,
+  // podium 4:5, phone #1 square, results list square.
+  { label: 'Desktop VS card', width: 240, height: 198 },
+  { label: 'Phone VS card', width: 120, height: 163 },
+  { label: 'Podium #2 / #3', width: 120, height: 150 },
+  { label: 'Phone #1', width: 150, height: 150 },
   { label: 'Result list', width: 82, height: 82 },
   { label: 'Saved image top 3', width: 152, height: 190 },
 ]
@@ -46,15 +50,23 @@ const defaultBox = (natural, focus, ratio) => {
   }
 }
 
+// Framed exactly like the site's Portrait: the photo is sized and offset inside a fixed box.
 function Preview({ src, natural, focus, width, height, label }) {
-  const position = natural ? coverPosition(natural.w, natural.h, width, height, focus[0], focus[1]) : '50% 50%'
+  const frame = natural ? coverFrame(natural.w, natural.h, width, height, focus[0], focus[1], focus[2]) : null
   return (
     <figure className="ct-preview">
-      <img src={src} alt="" style={{ width, height, objectPosition: position }} />
+      <span className="ct-preview-box" style={{ width, height }}>
+        {frame && <img src={src} alt="" style={frame} />}
+      </span>
       <figcaption>{label}</figcaption>
     </figure>
   )
 }
+
+const MAX_ZOOM = 3
+const zoomOf = (focus) => focus[2] || 1
+// Face position as saved: [x, y], plus the zoom only when it's above 1×.
+const withZoom = (xy, zoom) => (zoom > 1.001 ? [...xy, Math.round(zoom * 100) / 100] : xy)
 
 export default function CropTool() {
   const [id, setId] = useState(() => {
@@ -99,14 +111,27 @@ export default function CropTool() {
   const pickFace = async (event) => {
     if (box || !natural) return
     const rect = frameRef.current.getBoundingClientRect()
-    const next = [((event.clientX - rect.left) / rect.width) * 100, ((event.clientY - rect.top) / rect.height) * 100].map(Math.round)
+    const next = withZoom([((event.clientX - rect.left) / rect.width) * 100, ((event.clientY - rect.top) / rect.height) * 100].map(Math.round), zoomOf(focus))
     setFocus(next)
+    saveFocus(next, 'Face position saved')
+  }
+
+  const saveFocus = async (next, message) => {
     try {
       await post({ action: 'focus', file: fileOf(player), focus: next })
-      setStatus('Face position saved')
+      setStatus(message)
     } catch (error) {
       setStatus(`Could not save: ${error.message}`)
     }
+  }
+
+  // The slider updates the previews live and saves once it stops moving for a moment.
+  const zoomTimer = useRef(null)
+  const changeZoom = (value) => {
+    const next = withZoom(focus.slice(0, 2), value)
+    setFocus(next)
+    window.clearTimeout(zoomTimer.current)
+    zoomTimer.current = window.setTimeout(() => saveFocus(next, `Zoom ${value.toFixed(2)}× saved`), 400)
   }
 
   const startCrop = () => setBox(defaultBox(natural, focus, RATIOS[ratio]))
@@ -163,10 +188,10 @@ export default function CropTool() {
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(imageRef.current, box.x, box.y, box.w, box.h, 0, 0, canvas.width, canvas.height)
       // Keep the face where it was, now measured inside the cropped photo.
-      const newFocus = [
+      const newFocus = withZoom([
         clamp((((focus[0] / 100) * natural.w - box.x) / box.w) * 100, 0, 100),
         clamp((((focus[1] / 100) * natural.h - box.y) / box.h) * 100, 0, 100),
-      ]
+      ], zoomOf(focus))
       const result = await post({ action: 'crop', file: fileOf(player), focus: newFocus, image: canvas.toDataURL('image/jpeg', 0.9) })
       setStatus(`Cropped. Original kept in ${result.archived}. Reloading…`)
       // The dev server reloads the page when the photo file changes; this is a fallback.
@@ -227,6 +252,11 @@ export default function CropTool() {
           {!box ? (
             <>
               <p className="ct-help">Click the face to set where every crop centres. It saves right away.</p>
+              <label className="ct-zoom">
+                <span>Zoom on the site <strong>{zoomOf(focus).toFixed(2)}×</strong></span>
+                <input type="range" min="1" max={MAX_ZOOM} step="0.05" value={zoomOf(focus)} onChange={(event) => changeZoom(Number(event.target.value))} />
+              </label>
+              {zoomOf(focus) > 1 && <button onClick={() => changeZoom(1)}>Reset zoom</button>}
               <button className="ct-primary" onClick={startCrop} disabled={!natural}>Crop this photo…</button>
             </>
           ) : (

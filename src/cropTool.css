@@ -28,7 +28,10 @@
 .ct-status { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface); }
 .ct-previews { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .ct-preview { margin: 0; }
-.ct-preview img { display: block; object-fit: cover; background: var(--surface-2); }
+.ct-preview-box { position: relative; display: block; overflow: hidden; background: var(--surface-2); }
+.ct-preview-box img { position: absolute; display: block; max-width: none; }
+.ct-zoom { display: grid; gap: 6px; margin: 4px 0 12px; font-size: 13px; }
+.ct-zoom input { width: 100%; accent-color: var(--pop); }
 .ct-preview figcaption { margin-top: 4px; color: var(--muted); font-size: 11px; }
 @media (max-width: 900px) { .ct-work { grid-template-columns: 1fr; } }
 

@@ -62,8 +62,11 @@ const readBody = (request) => new Promise((resolve, reject) => {
 
 const saveFocus = (key, focus) => {
   const all = JSON.parse(readFileSync(focusFile, 'utf8'))
-  all[key] = focus.map((value) => Math.round(Math.min(100, Math.max(0, value))))
-  const lines = Object.keys(all).map((name) => `  ${JSON.stringify(name)}: [${all[name][0]}, ${all[name][1]}]`)
+  // [x, y] in percent, plus an optional zoom (1–3×) as a third value.
+  const [x, y, zoom] = focus
+  all[key] = [x, y].map((value) => Math.round(Math.min(100, Math.max(0, value))))
+  if (zoom > 1.001) all[key].push(Math.round(Math.min(3, zoom) * 100) / 100)
+  const lines = Object.keys(all).map((name) => `  ${JSON.stringify(name)}: [${all[name].join(', ')}]`)
   writeFileSync(focusFile, `{\n${lines.join(',\n')}\n}\n`)
 }
 
@@ -97,7 +100,7 @@ const cropTool = () => ({
         const match = portraitPath.exec(file || '')
         if (!match || !existsSync(join(playersDir, file))) return reply(400, { error: 'Unknown portrait' })
         const [, team, slug] = match
-        const validFocus = Array.isArray(focus) && focus.length === 2 && focus.every(Number.isFinite)
+        const validFocus = Array.isArray(focus) && (focus.length === 2 || focus.length === 3) && focus.every(Number.isFinite)
         if (action === 'focus') {
           if (!validFocus) return reply(400, { error: 'Bad face position' })
           saveFocus(`${team}/${slug}`, focus)
